@@ -76,7 +76,7 @@ uint8_t flipUintValue(uint8_t value) {
 }
 
 String getTempString() {
-    StaticJsonDocument<96> doc;
+    JsonDocument doc;
 
     doc["currentTemp"] = curTemp;
     doc["targetTemp"] = tTemp;
@@ -127,8 +127,8 @@ String getValue(String varName) {
     }
 }
 
-void paramToJson(String name, editable_t &e, DynamicJsonDocument &doc) {
-    JsonObject paramObj = doc.createNestedObject();
+void paramToJson(String name, editable_t &e, JsonDocument &doc) {
+    JsonObject paramObj = doc.to<JsonObject>();
     paramObj["type"] = e.type;
     paramObj["name"] = name;
     paramObj["displayName"] = e.displayName;
@@ -310,9 +310,7 @@ void serverSetup() {
             docLength = std::min(requestParams, EDITABLE_VARS_LEN);
         }
 
-        DynamicJsonDocument doc(JSON_ARRAY_SIZE(EDITABLE_VARS_LEN)  // array EDITABLE_VARS_LEN with parameters
-            + JSON_OBJECT_SIZE(9) * EDITABLE_VARS_LEN               // object with 9 values per parameter
-            + JSON_STRING_SIZE(25 + 30) * EDITABLE_VARS_LEN);       // string size for templateString and displayName
+        JsonDocument doc;
 
         if (request->method() == 2) {   // method() returns values from WebRequestMethod enum -> 2 == HTTP_POST
             // returns values from WebRequestMethod enum -> 2 == HTTP_POST
@@ -410,7 +408,7 @@ void serverSetup() {
     });
 
     server.on("/parameterHelp", HTTP_GET, [](AsyncWebServerRequest *request) {
-        DynamicJsonDocument doc(1024);
+        JsonDocument doc;
         AsyncWebParameter* p = request->getParam(0);
 
         if (p == NULL) {
@@ -447,12 +445,12 @@ void serverSetup() {
         AsyncResponseStream *response = request->beginResponseStream("application/json");
 
         // set capacity of json doc for history structure
-        DynamicJsonDocument doc(JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(HISTORY_LENGTH) * 3);
+        JsonDocument doc;
 
         // for each value in mem history array, add json array element
-        JsonArray currentTemps = doc.createNestedArray("currentTemps");
-        JsonArray targetTemps = doc.createNestedArray("targetTemps");
-        JsonArray heaterPowers = doc.createNestedArray("heaterPowers");
+        JsonArray currentTemps = doc["currentTemps"].to<JsonArray>();
+        JsonArray targetTemps = doc["targetTemps"].to<JsonArray>();
+        JsonArray heaterPowers = doc["heaterPowers"].to<JsonArray>();
 
         // go through history values backwards starting from currentIndex and
         // wrap around beginning to include valueCount many values
