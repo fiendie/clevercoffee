@@ -58,7 +58,7 @@ typedef enum
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "debugSerial.h"
+#include "Logger.h"
 #include "defaults.h"
 
 #include "isr.h"
@@ -346,7 +346,7 @@ static inline int32_t getItemAddr(sto_item_id_t itemId, uint16_t* maxItemSize = 
             break;
 
         default:
-            debugPrintf("%s(): invalid item ID %i!\n", __func__, itemId);
+            LOGF(ERROR, "invalid item ID %i!", itemId);
             addr = -1;
             size = 0;
             break;
@@ -404,7 +404,7 @@ static inline bool isString(const void* buf, uint16_t bufSize) {
  * @brief Sets the default values.
  */
 static void setDefaults(void) {
-    debugPrintf("%s(): %p <- %p (%u)\n", __func__, EEPROM.getDataPtr(), &itemDefaults, sizeof(itemDefaults));
+    LOGF(TRACE, "%p <- %p (%u)", EEPROM.getDataPtr(), &itemDefaults, sizeof(itemDefaults));
     memcpy_P(EEPROM.getDataPtr(), &itemDefaults, sizeof(itemDefaults));
 }
 #endif
@@ -418,7 +418,7 @@ static void setDefaults(void) {
 int storageSetup(void) {
 
     if (!EEPROM.begin(sizeof(sto_data_t))) {
-        debugPrintf("%s(): EEPROM initialization failed!\n", __func__);
+        LOG(FATAL, "EEPROM initialization failed!");
         return -1;
     }
 
@@ -436,7 +436,7 @@ int storageSetup(void) {
  *         <0 - failed
  */
 int storageCommit(void) {
-    debugPrintf("%s(): save all data to EEPROM memory\n", __func__);
+    LOG(INFO, "save all data to EEPROM memory");
 
     // really write data to storage...
     int returnCode = EEPROM.commit() ? 0 : -1;
@@ -459,21 +459,21 @@ static inline int getNumber(sto_item_id_t itemId, T& itemValue) {
     int32_t itemAddr = getItemAddr(itemId, &maxItemSize);
 
     if (itemAddr < 0) {
-        debugPrintf("%s(): invalid item address!\n", __func__);
+        LOG(ERROR, "invalid item address!");
         return -1;
     }
 
-    debugPrintf("%s(): addr=%i size=%u/%u\n", __func__, itemAddr, sizeof(itemValue), maxItemSize);
+    LOGF(TRACE, "addr=%i size=%u/%u", itemAddr, sizeof(itemValue), maxItemSize);
 
     if (sizeof(itemValue) != maxItemSize) {
-        debugPrintf("%s(): invalid item size (wrong data type)!\n", __func__);
+        LOG(WARNING, "invalid item size (wrong data type)!");
         return -2;
     }
 
     EEPROM.get(itemAddr, itemValue);
 
     if (isEmpty(&itemValue, sizeof(itemValue))) { // item storage empty?
-        debugPrintf("%s(): storage empty -> returning default\n", __func__);
+        LOG(INFO, "storage empty -> returning default");
 
         memcpy_P(&itemValue, (PGM_P)&itemDefaults + itemAddr, sizeof(itemValue));  // set default value
     }
@@ -499,19 +499,19 @@ static inline int setNumber(sto_item_id_t itemId, const T& itemValue, bool commi
     int32_t itemAddr = getItemAddr(itemId, &maxItemSize);
 
     if (itemAddr < 0) {
-        debugPrintf("%s(): invalid item address!\n", __func__);
+        LOG(WARNING, "invalid item address!");
         return -1;
     }
 
-    debugPrintf("%s(): addr=%i size=%u/%u commit=%u\n", __func__, itemAddr, sizeof(itemValue), maxItemSize, commit);
+    LOGF(TRACE, "addr=%i size=%u/%u commit=%u", itemAddr, sizeof(itemValue), maxItemSize, commit);
 
     if (sizeof(itemValue) != maxItemSize) {
-        debugPrintf("%s(): invalid item size (wrong data type)!\n", __func__);
+        LOG(WARNING, "invalid item size (wrong data type)!");
         return -2;
     }
 
     if (isEmpty(&itemValue, sizeof(T))) {
-        debugPrintf("%s(): invalid item value!\n", __func__);
+        LOG(WARNING, "invalid item value!");
         return -3;
     }
 
@@ -536,7 +536,7 @@ int storageGet(sto_item_id_t itemId, float& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%.1f\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%.1f", itemId, itemValue);
 
     return 0;
 }
@@ -546,7 +546,7 @@ int storageGet(sto_item_id_t itemId, double& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%.1f\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%.1f", itemId, itemValue);
 
     return 0;
 }
@@ -556,7 +556,7 @@ int storageGet(sto_item_id_t itemId, int8_t& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
 
     return 0;
 }
@@ -566,7 +566,7 @@ int storageGet(sto_item_id_t itemId, int16_t& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
 
     return 0;
 }
@@ -576,7 +576,7 @@ int storageGet(sto_item_id_t itemId, int32_t& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
 
     return 0;
 }
@@ -586,7 +586,7 @@ int storageGet(sto_item_id_t itemId, uint8_t& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
 
     return 0;
 }
@@ -594,7 +594,7 @@ int storageGet(sto_item_id_t itemId, uint8_t& itemValue) {
 int storageGet(sto_item_id_t itemId, uint16_t& itemValue) {
     int retCode = getNumber(itemId, itemValue);
     if (retCode != 0) return retCode;
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
 
     return 0;
 }
@@ -604,7 +604,7 @@ int storageGet(sto_item_id_t itemId, uint32_t& itemValue) {
 
     if (retCode != 0) return retCode;
 
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
 
     return 0;
 }
@@ -627,11 +627,11 @@ int storageGet(sto_item_id_t itemId, const char** itemValue) {
     itemSize = strlen(*itemValue) + 1;
 
     if (isEmpty(*itemValue, itemSize)) { // item storage empty?
-        debugPrintf("%s(): storage empty -> returning default\n", __func__);
+        LOG(TRACE, "storage empty -> returning default");
         memcpy_P(&itemValue, (const void*)(&itemDefaults+itemAddr), itemSize);      // set default value
     }
 
-    debugPrintf("%s(): addr=%i size=%u item=%i value=\"%s\"\n", __func__, itemAddr, itemSize, itemId, *itemValue);
+    LOGF(TRACE, "addr=%i size=%u item=%i value=\"%s\"", itemAddr, itemSize, itemId, *itemValue);
 
     return 0;
 }
@@ -642,7 +642,7 @@ int storageGet(sto_item_id_t itemId, String& itemValue) {
     int32_t itemAddr = getItemAddr(itemId, &maxItemSize);
 
     if (itemAddr < 0) {
-        debugPrintf("%s(): invalid item address!\n", __func__);
+        LOG(WARNING, "invalid item address!");
         return -1;
     }
 
@@ -654,11 +654,11 @@ int storageGet(sto_item_id_t itemId, String& itemValue) {
     if (isString(buf, maxItemSize)) { // exist a null terminator?
         itemValue = String((const char*)buf);
     } else {
-        debugPrintf("%s(): storage empty -> returning default\n", __func__);
+        LOG(INFO, "storage empty -> returning default");
         itemValue = String((PGM_P)&itemDefaults + itemAddr);  // set default string
     }
 
-    debugPrintf("%s(): addr=%i size=%u item=%i value=\"%s\"\n", __func__, itemAddr, itemValue.length() + 1, itemId, itemValue.c_str());
+    LOGF(TRACE, "addr=%i size=%u item=%i value=\"%s\"", itemAddr, itemValue.length() + 1, itemId, itemValue.c_str());
 
     return 0;
 }
@@ -676,42 +676,42 @@ int storageGet(sto_item_id_t itemId, String& itemValue) {
  *         <0 - failed
  */
 int storageSet(sto_item_id_t itemId, float itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%.1f\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%.1f", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, double itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%.1f\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%.1f", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, int8_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, int16_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, int32_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%i\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%i", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, uint8_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, uint16_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
 int storageSet(sto_item_id_t itemId, uint32_t itemValue, bool commit) {
-    debugPrintf("%s(): item=%i value=%u\n", __func__, itemId, itemValue);
+    LOGF(TRACE, "item=%i value=%u", itemId, itemValue);
     return setNumber(itemId, itemValue, commit);
 }
 
@@ -721,15 +721,15 @@ int storageSet(sto_item_id_t itemId, const char* itemValue, bool commit) {
     int32_t itemAddr = getItemAddr(itemId, &maxItemSize);
 
     if (itemAddr < 0) {
-        debugPrintf("%s(): invalid item address!\n", __func__);
+        LOG(WARNING, "invalid item address!");
         return -1;
     }
 
     valueSize = strlen(itemValue) + 1;
-    debugPrintf("%s(): item=%i value=\"%s\" addr=%i size=%u/%u\n", __func__, itemId, itemValue, itemAddr, valueSize, maxItemSize);
+    LOGF(TRACE, "item=%i value=\"%s\" addr=%i size=%u/%u", itemId, itemValue, itemAddr, valueSize, maxItemSize);
 
     if (valueSize > maxItemSize) { // invalid value size?
-        debugPrintf("%s(): string too large!\n", __func__);
+        LOG(WARNING, "string too large!");
         return -2;
     }
 
@@ -751,7 +751,7 @@ int storageSet(sto_item_id_t itemId, String& itemValue, bool commit) {
  *         <0 - failed
  */
 int storageFactoryReset(void) {
-    debugPrintf("%s(): reset all values\n", __func__);
+    LOG(INFO, "reset all values");
     memset(EEPROM.getDataPtr(), 0xFF, sizeof(sto_data_t));
 
     return storageCommit();
