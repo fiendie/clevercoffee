@@ -35,23 +35,19 @@ def formatting_callback(*arg, **kwargs):
                     file_list.append(os.path.join(root, file))
 
     # for file in file_list:
-    if kwargs.get("apply", False):
-        env.Execute("clang-format --Werror -i " + " ".join(f'"{f}"' for f in file_list))
-    else:
-        env.Execute("clang-format --Werror --dry-run -i " + " ".join(f'"{f}"' for f in file_list))
+    if env.Execute("clang-format --Werror" + (" --dry-run " if not kwargs.get("apply", False) else " ") + "-i " + " ".join(f'"{f}"' for f in file_list)):
+        env.Exit(1)
 
 env.AddCustomTarget(
     "format",
     None,
     apply_format_callback,
     title="clang-format",
-    description="Run Source Code Formatting",
-    always_build=False)
+    description="Run Source Code Formatting")
 
 env.AddCustomTarget(
     "check-format",
     None,
     check_format_callback,
     title="clang-format",
-    description="Check Source Code Formatting",
-    always_build=False)
+    description="Check Source Code Formatting")
