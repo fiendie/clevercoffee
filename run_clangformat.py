@@ -5,7 +5,6 @@ import os
 import sys
 
 def check_format_callback(*arg, **kwargs):
-
     return formatting_callback(arg, kwargs)
 
 def apply_format_callback(*arg, **kwargs):
@@ -13,7 +12,6 @@ def apply_format_callback(*arg, **kwargs):
     return formatting_callback(arg, kwargs, apply=True)
 
 def formatting_callback(*arg, **kwargs):
-    print("Formatting Source Code", kwargs.get("apply", False))
     subprocess.check_call([sys.executable, "-m", "pip", "install", "clang-format"])
 
     folder_list = [env.get("PROJECT_INCLUDE_DIR"), env.get("PROJECT_SRC_DIR")]
