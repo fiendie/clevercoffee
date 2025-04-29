@@ -26,8 +26,7 @@ void printScreen() {
 
     // If no specific machine state was printed, print default:
 
-    if ((machineState == kPidNormal || (machineState == kBrew && FEATURE_SHOTTIMER == 0) ||
-         ((machineState == kPidDisabled) && FEATURE_PIDOFF_LOGO == 0)) && (brewSwitchState != kManualFlush) ||
+    if ((machineState == kPidNormal || (machineState == kBrew && FEATURE_SHOTTIMER == 0) || ((machineState == kPidDisabled) && FEATURE_PIDOFF_LOGO == 0)) && (brewSwitchState != kManualFlush) ||
         (machineState == kWaterTankEmpty) || (machineState == kPidDisabled) || (machineState == kStandby) || (machineState == kSteam)) {
         if (!tempSensor->hasError()) {
             u8g2.clearBuffer();
@@ -45,13 +44,13 @@ void printScreen() {
             u8g2.print((char)176);
             u8g2.print("C");
 
-        // Draw heat bar
-        u8g2.drawLine(0, 124, 63, 124);
-        u8g2.drawLine(0, 124, 0, 127);
-        u8g2.drawLine(64, 124, 63, 127);
-        u8g2.drawLine(0, 127, 63, 127);
-        u8g2.drawLine(1, 125, (pidOutput / 16.13) + 1, 125);
-        u8g2.drawLine(1, 126, (pidOutput / 16.13) + 1, 126);
+            // Draw heat bar
+            u8g2.drawLine(0, 124, 63, 124);
+            u8g2.drawLine(0, 124, 0, 127);
+            u8g2.drawLine(64, 124, 63, 127);
+            u8g2.drawLine(0, 127, 63, 127);
+            u8g2.drawLine(1, 125, (pidOutput / 16.13) + 1, 125);
+            u8g2.drawLine(1, 126, (pidOutput / 16.13) + 1, 126);
 
             // Show the heating logo when we are in regular PID mode
             if (FEATURE_HEATINGLOGO > 0 && machineState == kPidNormal && (setpoint - temperature) > 0.3 && brewSwitchState != kBrewSwitchFlushOff) {
@@ -159,37 +158,37 @@ void printScreen() {
 
             // Brew time
 #if (FEATURE_BREWSWITCH == 1)
-        if (featureBrewControl) {
-            // Show brew time
-            if (shouldDisplayBrewTimer()) {
-                u8g2.setCursor(1, 34);
-                u8g2.print(langstring_brew_rot_ur);
-                u8g2.print(timeBrewed / 1000, 0);
-                u8g2.print("/");
-                u8g2.print(totalBrewTime / 1000, 0);
-                u8g2.print(" s");
-            }
+            if (featureBrewControl) {
+                // Show brew time
+                if (shouldDisplayBrewTimer()) {
+                    u8g2.setCursor(1, 34);
+                    u8g2.print(langstring_brew_rot_ur);
+                    u8g2.print(timeBrewed / 1000, 0);
+                    u8g2.print("/");
+                    u8g2.print(totalBrewTime / 1000, 0);
+                    u8g2.print(" s");
+                }
 
-            // Shown flush time
-            if (machineState == kManualFlush) {
-                u8g2.setDrawColor(0);
-                u8g2.drawBox(1, 34, 100, 15);
-                u8g2.setDrawColor(1);
-                u8g2.setCursor(1, 34);
-                u8g2.print(langstring_manual_flush_rot_ur);
-                u8g2.print(timeBrewed / 1000, 0);
-                u8g2.print(" s");
+                // Shown flush time
+                if (machineState == kManualFlush) {
+                    u8g2.setDrawColor(0);
+                    u8g2.drawBox(1, 34, 100, 15);
+                    u8g2.setDrawColor(1);
+                    u8g2.setCursor(1, 34);
+                    u8g2.print(langstring_manual_flush_rot_ur);
+                    u8g2.print(timeBrewed / 1000, 0);
+                    u8g2.print(" s");
+                }
             }
-        }
-        else {
-            // Show brew time with optocoupler
-            if (shouldDisplayBrewTimer()) {
-                u8g2.setCursor(1, 34);
-                u8g2.print(langstring_brew_rot_ur);
-                u8g2.print(timeBrewed / 1000, 0);
-                u8g2.print(" s");
+            else {
+                // Show brew time with optocoupler
+                if (shouldDisplayBrewTimer()) {
+                    u8g2.setCursor(1, 34);
+                    u8g2.print(langstring_brew_rot_ur);
+                    u8g2.print(timeBrewed / 1000, 0);
+                    u8g2.print(" s");
+                }
             }
-        }
 #endif
 
             // For status info

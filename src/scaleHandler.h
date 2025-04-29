@@ -175,20 +175,9 @@ void initScale() {
 void shottimerscale() {
     switch (shottimerCounter) {
         case 10: // waiting step for brew switch turning on
-            if (preinfusionPause == 0 || preinfusion == 0) {
-                if (timeBrewed > 0) {
-                    weightPreBrew = currWeight;
-                    shottimerCounter = 20;
-                }
-            }
-            else {
-                if (timeBrewed > preinfusion * 1000) {
-                    weightPreBrew = currWeight;
-                    shottimerCounter = 20;
-                }
-                else if (timeBrewed > 0) {
-                    weightBrewed = 0;
-                }
+            if (currBrewState != kBrewIdle) {
+                weightPreBrew = currWeight;
+                shottimerCounter = 20;
             }
 
             break;
@@ -196,7 +185,7 @@ void shottimerscale() {
         case 20:
             weightBrewed = currWeight - weightPreBrew;
 
-            if (timeBrewed == 0) {
+            if (currBrewState == kBrewIdle) {
                 shottimerCounter = 10;
             }
 
