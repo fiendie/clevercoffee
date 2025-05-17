@@ -90,9 +90,9 @@ void printScreen() {
         // Shown brew time and weight
         if (featureBrewControl) {
             // weight
-            u8g2.setCursor(32, 26);
+            u8g2.setCursor(32, 36);
             u8g2.print(langstring_weight);
-            u8g2.setCursor(82, 26);
+            u8g2.setCursor(82, 36);
             u8g2.print(weightBrewed, 0);
 
             if (weightSetpoint > 0) {
@@ -102,9 +102,9 @@ void printScreen() {
             u8g2.print(" g");
 
             // time
-            u8g2.setCursor(32, 36);
+            u8g2.setCursor(32, 26);
             u8g2.print(langstring_brew);
-            u8g2.setCursor(82, 36);
+            u8g2.setCursor(82, 26);
             u8g2.print(timeBrewed / 1000, 0);
 
             if (brewTime > 0) {
@@ -116,15 +116,15 @@ void printScreen() {
         else {
             // Brew Timer with optocoupler
             // weight
-            u8g2.setCursor(32, 26);
+            u8g2.setCursor(32, 36);
             u8g2.print(langstring_weight);
-            u8g2.setCursor(82, 26);
+            u8g2.setCursor(82, 36);
             u8g2.print(weightBrewed, 0);
             u8g2.print(" g");
             // time
-            u8g2.setCursor(32, 36);
+            u8g2.setCursor(32, 26);
             u8g2.print(langstring_brew);
-            u8g2.setCursor(82, 36);
+            u8g2.setCursor(82, 26);
             u8g2.print(timeBrewed / 1000, 0);
             u8g2.print(" s");
         }
