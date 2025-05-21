@@ -525,7 +525,7 @@ int sendHASSIODiscoveryMsg() {
     DiscoveryObject aggTn = GenerateNumberDevice("aggTn", "aggTn", PID_TN_REGULAR_MIN, PID_TN_REGULAR_MAX, 0.1, "");
     DiscoveryObject aggTv = GenerateNumberDevice("aggTv", "aggTv", PID_TV_REGULAR_MIN, PID_TV_REGULAR_MAX, 0.1, "");
     DiscoveryObject aggIMax = GenerateNumberDevice("aggIMax", "aggIMax", PID_I_MAX_REGULAR_MIN, PID_I_MAX_REGULAR_MAX, 0.1, "");
-    DiscoveryObject brewTime = GenerateNumberDevice("brewTime", "Brew time", BREW_TIME_MIN, BREW_TIME_MAX, 0.1, "s");
+    DiscoveryObject targetBrewTime = GenerateNumberDevice("targetBrewTime", "Target Brew time", TARGET_BREW_TIME_MIN, TARGET_BREW_TIME_MAX, 0.1, "s");
     DiscoveryObject preinfusion = GenerateNumberDevice("preinfusion", "Preinfusion filling time", PRE_INFUSION_TIME_MIN, PRE_INFUSION_TIME_MAX, 0.1, "s");
     DiscoveryObject preinfusionPause = GenerateNumberDevice("preinfusionPause", "Preinfusion pause time", PRE_INFUSION_PAUSE_MIN, PRE_INFUSION_PAUSE_MAX, 0.1, "s");
     DiscoveryObject backflushCycles = GenerateNumberDevice("backflushCycles", "Backflush Cycles", BACKFLUSH_CYCLES_MIN, BACKFLUSH_CYCLES_MAX, 1, "");
@@ -540,34 +540,34 @@ int sendHASSIODiscoveryMsg() {
     // List of all DiscoveryObjects, will be always published
     std::vector<DiscoveryObject> discoveryObjects = {
         machineStateDevice, actual_temperature, heaterPower,      brewSetpoint,    steamSetpoint,     brewTempOffset,     startKp, startTn, steamKp,      aggKp,      aggTn, aggTv, aggIMax,
-        brewTime,           preinfusion,        preinfusionPause, backflushCycles, backflushFillTime, backflushFlushTime, pidOn,   steamON, startUsePonM, backflushOn};
+        targetBrewTime,     preinfusion,        preinfusionPause, backflushCycles, backflushFillTime, backflushFlushTime, pidOn,   steamON, startUsePonM, backflushOn};
 
     // Sensor, number and switch object which will be published based on feature set
 #if FEATURE_BREWSWITCH == 1
 
-    DiscoveryObject timeBrewed = GenerateSensorDevice("timeBrewed", "Time brewed", "s", "duration");
+    DiscoveryObject currBrewTime = GenerateSensorDevice("currBrewTime", "Current Brew Time ", "s", "duration");
 
     DiscoveryObject brewPidDelay = GenerateNumberDevice("brewPidDelay", "Brew Pid Delay", BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX, 0.1, "s");
 
-    discoveryObjects.push_back(timeBrewed);
+    discoveryObjects.push_back(currBrewTime);
     discoveryObjects.push_back(brewPidDelay);
 #endif
 
 #if FEATURE_SCALE == 1
 
-    DiscoveryObject currWeight = GenerateSensorDevice("currWeight", "Weight", "g", "weight");
-    DiscoveryObject weightBrewed = GenerateSensorDevice("weightBrewed", "Weight brewed", "g", "weight");
+    DiscoveryObject currReadingWeight = GenerateSensorDevice("currReadingWeight", "Weight", "g", "weight");
+    DiscoveryObject currBrewWeight = GenerateSensorDevice("currBrewWeight", "current Brew Weight", "g", "weight");
 
     DiscoveryObject scaleCalibrateButton = GenerateButtonDevice("scaleCalibrationOn", "Calibrate Scale");
     DiscoveryObject scaleTareButton = GenerateButtonDevice("scaleTareOn", "Tare Scale");
 
-    DiscoveryObject weightSetpoint = GenerateNumberDevice("weightSetpoint", "Weight setpoint", WEIGHTSETPOINT_MIN, WEIGHTSETPOINT_MAX, 0.1, "g");
+    DiscoveryObject targetBrewWeight = GenerateNumberDevice("targetBrewWeight", "Brew Weight Target", TARGET_BREW_WEIGHT_MIN, TARGET_BREW_WEIGHT_MAX, 0.1, "g");
 
-    discoveryObjects.push_back(currWeight);
-    discoveryObjects.push_back(weightBrewed);
+    discoveryObjects.push_back(currReadingWeight);
+    discoveryObjects.push_back(currBrewWeight);
     discoveryObjects.push_back(scaleCalibrateButton);
     discoveryObjects.push_back(scaleTareButton);
-    discoveryObjects.push_back(weightSetpoint);
+    discoveryObjects.push_back(targetBrewWeight);
 #endif
 
 #if FEATURE_PRESSURESENSOR == 1

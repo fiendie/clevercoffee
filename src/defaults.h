@@ -36,11 +36,11 @@ int writeSysParamsToStorage(void);
 #define AGGBKP                                50     // PID Kp (brew detection phase)
 #define AGGBTN                                0      // PID Tn (brew detection phase)
 #define AGGBTV                                20     // PID Tv (brew detection phase)
-#define BREW_TIME                             25     // brew time in seconds (only used if pump is being controlled)
+#define TARGET_BREW_TIME                      25     // brew time in seconds (only used if pump is being controlled)
 #define BREW_PID_DELAY                        10     // delay until enabling PID controller during brew (no heating during this time)
 #define PRE_INFUSION_TIME                     2      // pre-infusion time in seconds
 #define PRE_INFUSION_PAUSE_TIME               5      // pre-infusion pause time in seconds
-#define SCALE_WEIGHTSETPOINT                  30     // Target weight in grams
+#define TARGET_BREW_WEIGHT                    30     // Target weight in grams
 #define WIFI_CREDENTIALS_SAVED                0      // Flag if wifi setup is done. 0: not set up, 1: credentials set up via wifi manager
 #define STANDBY_MODE_ON                       0      // Standby mode off by default
 #define STANDBY_MODE_TIME                     30     // Time in minutes until the heater is turned off
@@ -78,16 +78,16 @@ int writeSysParamsToStorage(void);
 #define STEAM_SETPOINT_MAX           140
 #define BREW_TEMP_OFFSET_MIN         0
 #define BREW_TEMP_OFFSET_MAX         20
-#define BREW_TIME_MIN                0
-#define BREW_TIME_MAX                180
+#define TARGET_BREW_TIME_MIN         0
+#define TARGET_BREW_TIME_MAX         180
 #define BREW_PID_DELAY_MIN           0
 #define BREW_PID_DELAY_MAX           60
 #define PRE_INFUSION_TIME_MIN        0
 #define PRE_INFUSION_TIME_MAX        60
 #define PRE_INFUSION_PAUSE_MIN       0
 #define PRE_INFUSION_PAUSE_MAX       60
-#define WEIGHTSETPOINT_MIN           0
-#define WEIGHTSETPOINT_MAX           500
+#define TARGET_BREW_WEIGHT_MIN       0
+#define TARGET_BREW_WEIGHT_MAX       500
 #define PID_KP_STEAM_MIN             0
 #define PID_KP_STEAM_MAX             500
 #define STANDBY_MODE_TIME_MIN        30

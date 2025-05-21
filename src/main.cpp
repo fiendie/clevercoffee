@@ -199,7 +199,7 @@ double aggIMax = AGGIMAX;
 float scaleCalibration = SCALE_CALIBRATION_FACTOR;
 float scale2Calibration = SCALE_CALIBRATION_FACTOR;
 float scaleKnownWeight = SCALE_KNOWN_WEIGHT;
-double weightSetpoint = SCALE_WEIGHTSETPOINT;
+double targetBrewWeight = TARGET_BREW_WEIGHT;
 
 // PID - values for offline brew detection
 uint8_t useBDPID = 0;
@@ -260,13 +260,13 @@ SysPara<double> sysParaBrewSetpoint(&brewSetpoint, BREW_SETPOINT_MIN, BREW_SETPO
 SysPara<double> sysParaTempOffset(&brewTempOffset, BREW_TEMP_OFFSET_MIN, BREW_TEMP_OFFSET_MAX, STO_ITEM_BREW_TEMP_OFFSET);
 SysPara<double> sysParaBrewPIDDelay(&brewPIDDelay, BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX, STO_ITEM_BREW_PID_DELAY);
 SysPara<uint8_t> sysParaUseBDPID(&useBDPID, 0, 1, STO_ITEM_USE_BD_PID);
-SysPara<double> sysParaBrewTime(&brewTime, BREW_TIME_MIN, BREW_TIME_MAX, STO_ITEM_BREW_TIME);
+SysPara<double> sysParaTargetBrewTime(&targetBrewTime, TARGET_BREW_TIME_MIN, TARGET_BREW_TIME_MAX, STO_ITEM_TARGET_BREW_TIME);
 SysPara<uint8_t> sysParaWifiCredentialsSaved(&wifiCredentialsSaved, 0, 1, STO_ITEM_WIFI_CREDENTIALS_SAVED);
 SysPara<double> sysParaPreInfTime(&preinfusion, PRE_INFUSION_TIME_MIN, PRE_INFUSION_TIME_MAX, STO_ITEM_PRE_INFUSION_TIME);
 SysPara<double> sysParaPreInfPause(&preinfusionPause, PRE_INFUSION_PAUSE_MIN, PRE_INFUSION_PAUSE_MAX, STO_ITEM_PRE_INFUSION_PAUSE);
 SysPara<double> sysParaPidKpSteam(&steamKp, PID_KP_STEAM_MIN, PID_KP_STEAM_MAX, STO_ITEM_PID_KP_STEAM);
 SysPara<double> sysParaSteamSetpoint(&steamSetpoint, STEAM_SETPOINT_MIN, STEAM_SETPOINT_MAX, STO_ITEM_STEAM_SETPOINT);
-SysPara<double> sysParaWeightSetpoint(&weightSetpoint, WEIGHTSETPOINT_MIN, WEIGHTSETPOINT_MAX, STO_ITEM_WEIGHTSETPOINT);
+SysPara<double> sysParaTargetBrewWeight(&targetBrewWeight, TARGET_BREW_WEIGHT_MIN, TARGET_BREW_WEIGHT_MAX, STO_ITEM_TARGET_BREW_WEIGHT);
 SysPara<uint8_t> sysParaStandbyModeOn(&standbyModeOn, 0, 1, STO_ITEM_STANDBY_MODE_ON);
 SysPara<double> sysParaStandbyModeTime(&standbyModeTime, STANDBY_MODE_TIME_MIN, STANDBY_MODE_TIME_MAX, STO_ITEM_STANDBY_MODE_TIME);
 SysPara<float> sysParaScaleCalibration(&scaleCalibration, -100000, 100000, STO_ITEM_SCALE_CALIBRATION_FACTOR);
@@ -736,10 +736,6 @@ void handleMachineState() {
                 machineState = kPidNormal;
             }
 
-            if (!waterTankFull) {
-                machineState = kWaterTankEmpty;
-            }
-
             if (tempSensor->hasError()) {
                 machineState = kSensorError;
             }
@@ -1110,16 +1106,16 @@ void setup() {
                                    .maxValue = true,
                                    .ptr = (void*)&featureBrewControl};
 
-    editableVars["BREW_TIME"] = {.displayName = F("Brew Time (s)"),
-                                 .hasHelpText = true,
-                                 .helpText = F("Stop brew after this time. Set to 0 to deactivate brew-by-time-feature."),
-                                 .type = kDouble,
-                                 .section = sBrewSection,
-                                 .position = 15,
-                                 .show = [] { return true && featureBrewControl == 1; },
-                                 .minValue = BREW_TIME_MIN,
-                                 .maxValue = BREW_TIME_MAX,
-                                 .ptr = (void*)&brewTime};
+    editableVars["TARGET_BREW_TIME"] = {.displayName = F("Target Brew Time (s)"),
+                                        .hasHelpText = true,
+                                        .helpText = F("Stop brew after this time. Set to 0 to deactivate brew-by-time-feature."),
+                                        .type = kDouble,
+                                        .section = sBrewSection,
+                                        .position = 15,
+                                        .show = [] { return true && featureBrewControl == 1; },
+                                        .minValue = TARGET_BREW_TIME_MIN,
+                                        .maxValue = TARGET_BREW_TIME_MAX,
+                                        .ptr = (void*)&targetBrewTime};
 
     editableVars["BREW_PREINFUSIONPAUSE"] = {.displayName = F("Preinfusion Pause Time (s)"),
                                              .hasHelpText = false,
@@ -1176,16 +1172,16 @@ void setup() {
                                             .maxValue = BACKFLUSH_FLUSH_TIME_MAX,
                                             .ptr = (void*)&backflushFlushTime};
 
-    editableVars["SCALE_WEIGHTSETPOINT"] = {.displayName = F("Brew weight setpoint (g)"),
-                                            .hasHelpText = true,
-                                            .helpText = F("Brew is running until this weight has been measured. Set to 0 to deactivate brew-by-weight-feature."),
-                                            .type = kDouble,
-                                            .section = sBrewSection,
-                                            .position = 21,
-                                            .show = [] { return true && FEATURE_SCALE == 1 && featureBrewControl == 1; },
-                                            .minValue = WEIGHTSETPOINT_MIN,
-                                            .maxValue = WEIGHTSETPOINT_MAX,
-                                            .ptr = (void*)&weightSetpoint};
+    editableVars["SCALE_TARGET_BREW_WEIGHT"] = {.displayName = F("Brew weight target (g)"),
+                                                .hasHelpText = true,
+                                                .helpText = F("Brew is running until this weight has been measured. Set to 0 to deactivate brew-by-weight-feature."),
+                                                .type = kDouble,
+                                                .section = sBrewSection,
+                                                .position = 21,
+                                                .show = [] { return true && FEATURE_SCALE == 1 && featureBrewControl == 1; },
+                                                .minValue = TARGET_BREW_WEIGHT_MIN,
+                                                .maxValue = TARGET_BREW_WEIGHT_MAX,
+                                                .ptr = (void*)&targetBrewWeight};
 
     editableVars["PID_BD_DELAY"] = {.displayName = F("Brew PID Delay (s)"),
                                     .hasHelpText = true,
@@ -1442,7 +1438,7 @@ void setup() {
     mqttSensors["machineState"] = [] { return machineState; };
 
 #if FEATURE_BREWSWITCH == 1
-    mqttSensors["timeBrewed"] = [] { return timeBrewed / 1000; };
+    mqttSensors["currBrewTime"] = [] { return currBrewTime / 1000; };
 #endif
 
 #if FEATURE_SCALE == 1
@@ -1455,8 +1451,8 @@ void setup() {
     mqttVars["scaleTareOn"] = [] { return &editableVars.at("TARE_ON"); };
     mqttVars["scaleCalibrationOn"] = [] { return &editableVars.at("CALIBRATION_ON"); };
 
-    mqttSensors["currWeight"] = [] { return currWeight; };
-    mqttSensors["weightBrewed"] = [] { return weightBrewed; };
+    mqttSensors["currReadingWeight"] = [] { return currReadingWeight; };
+    mqttSensors["currBrewWeight"] = [] { return currBrewWeight; };
 #endif
 
 #if FEATURE_PRESSURESENSOR == 1
@@ -1673,7 +1669,7 @@ void looppid() {
             LOGF(TRACE, "Current PID Output: %f", pidOutput);
             LOGF(TRACE, "Current Machinestate: %s", machinestateEnumToString(machineState));
             // Brew
-            LOGF(TRACE, "timeBrewed %f", timeBrewed);
+            LOGF(TRACE, "currBrewTime %f", currBrewTime);
             LOGF(TRACE, "Brew detected %i", brew());
             LOGF(TRACE, "brewPIDdisabled %i", brewPIDDisabled);
         }
@@ -1762,7 +1758,7 @@ void looppid() {
 
     // Brew PID
     if (machineState == kBrew) {
-        if (brewPIDDelay > 0 && timeBrewed > 0 && timeBrewed < brewPIDDelay * 1000) {
+        if (brewPIDDelay > 0 && currBrewTime > 0 && currBrewTime < brewPIDDelay * 1000) {
             // disable PID for brewPIDDelay seconds, enable PID again with new tunings after that
             if (!brewPIDDisabled) {
                 brewPIDDisabled = true;
@@ -1937,12 +1933,12 @@ int readSysParamsFromStorage(void) {
     if (sysParaPidKpBd.getStorage() != 0) return -1;
     if (sysParaPidTnBd.getStorage() != 0) return -1;
     if (sysParaPidTvBd.getStorage() != 0) return -1;
-    if (sysParaBrewTime.getStorage() != 0) return -1;
+    if (sysParaTargetBrewTime.getStorage() != 0) return -1;
     if (sysParaPreInfTime.getStorage() != 0) return -1;
     if (sysParaPreInfPause.getStorage() != 0) return -1;
     if (sysParaPidKpSteam.getStorage() != 0) return -1;
     if (sysParaSteamSetpoint.getStorage() != 0) return -1;
-    if (sysParaWeightSetpoint.getStorage() != 0) return -1;
+    if (sysParaTargetBrewWeight.getStorage() != 0) return -1;
     if (sysParaWifiCredentialsSaved.getStorage() != 0) return -1;
     if (sysParaStandbyModeOn.getStorage() != 0) return -1;
     if (sysParaStandbyModeTime.getStorage() != 0) return -1;
@@ -1983,12 +1979,12 @@ int writeSysParamsToStorage(void) {
     if (sysParaPidKpBd.setStorage() != 0) return -1;
     if (sysParaPidTnBd.setStorage() != 0) return -1;
     if (sysParaPidTvBd.setStorage() != 0) return -1;
-    if (sysParaBrewTime.setStorage() != 0) return -1;
+    if (sysParaTargetBrewTime.setStorage() != 0) return -1;
     if (sysParaPreInfTime.setStorage() != 0) return -1;
     if (sysParaPreInfPause.setStorage() != 0) return -1;
     if (sysParaPidKpSteam.setStorage() != 0) return -1;
     if (sysParaSteamSetpoint.setStorage() != 0) return -1;
-    if (sysParaWeightSetpoint.setStorage() != 0) return -1;
+    if (sysParaTargetBrewWeight.setStorage() != 0) return -1;
     if (sysParaWifiCredentialsSaved.setStorage() != 0) return -1;
     if (sysParaStandbyModeOn.setStorage() != 0) return -1;
     if (sysParaStandbyModeTime.setStorage() != 0) return -1;

@@ -85,9 +85,9 @@ void printScreen() {
         if (shouldDisplayBrewTimer()) {
             u8g2.setCursor(34, 44);
             u8g2.print(langstring_brew);
-            u8g2.print(timeBrewed / 1000, 0);
+            u8g2.print(currBrewTime / 1000, 0);
             u8g2.print("/");
-            u8g2.print(totalBrewTime / 1000, 0);
+            u8g2.print(totalTargetBrewTime / 1000, 0);
         }
 
         // Shown flush time
@@ -97,7 +97,7 @@ void printScreen() {
             u8g2.setDrawColor(1);
             u8g2.setCursor(34, 44);
             u8g2.print(langstring_manual_flush);
-            u8g2.print(timeBrewed / 1000, 0);
+            u8g2.print(currBrewTime / 1000, 0);
         }
     }
     else {
@@ -105,7 +105,7 @@ void printScreen() {
         if (shouldDisplayBrewTimer()) {
             u8g2.setCursor(34, 44);
             u8g2.print(langstring_brew);
-            u8g2.print(timeBrewed / 1000, 0);
+            u8g2.print(currBrewTime / 1000, 0);
         }
     }
 #endif

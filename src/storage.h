@@ -23,7 +23,7 @@ typedef enum {
     STO_ITEM_BREW_SETPOINT,                         // brew setpoint
     STO_ITEM_BREW_TEMP_OFFSET,                      // brew temp offset
     STO_ITEM_USE_BD_PID,                            // use separate PID for brew detection (otherwise continue with regular PID)
-    STO_ITEM_BREW_TIME,                             // brew time
+    STO_ITEM_TARGET_BREW_TIME,                      // target brew time
     STO_ITEM_BREW_PID_DELAY,                        // brew PID delay
     STO_ITEM_WIFI_CREDENTIALS_SAVED,                // flag for wifisetup
     STO_ITEM_PRE_INFUSION_TIME,                     // pre-infusion time
@@ -33,7 +33,7 @@ typedef enum {
     STO_ITEM_SOFT_AP_ENABLED_CHECK,                 // soft AP enable state
     STO_ITEM_WIFI_SSID,                             // Wifi SSID
     STO_ITEM_WIFI_PASSWORD,                         // Wifi password
-    STO_ITEM_WEIGHTSETPOINT,                        // Brew weight setpoint
+    STO_ITEM_TARGET_BREW_WEIGHT,                    // Brew weight target
     STO_ITEM_STANDBY_MODE_ON,                       // Enable tandby mode
     STO_ITEM_STANDBY_MODE_TIME,                     // Time until heater is turned off
     STO_ITEM_SCALE_CALIBRATION_FACTOR,              // Calibration factor for scale
@@ -85,7 +85,7 @@ typedef struct __attribute__((packed)) {
         double brewSetpoint;
         double brewTempOffset;
         uint8_t freeToUse3;
-        double brewTimeMs;
+        double targetBrewTimeMs;
         float scaleCalibration;
         double preInfusionTimeMs;
         float scaleKnownWeight;
@@ -112,7 +112,7 @@ typedef struct __attribute__((packed)) {
         uint8_t freeToUse15[2];
         char wifiSSID[25 + 1];
         char wifiPassword[25 + 1];
-        double weightSetpoint;
+        double targetBrewWeight;
         double steamkp;
         double steamSetpoint;
         uint8_t standbyModeOn;
@@ -142,7 +142,7 @@ static const sto_data_t itemDefaults PROGMEM = {
     SETPOINT,                                                                                                                       // STO_ITEM_BREW_SETPOINT
     TEMPOFFSET,                                                                                                                     // STO_ITEM_BREW_TEMP_OFFSET
     0xFF,                                                                                                                           // free to use
-    BREW_TIME,                                                                                                                      // STO_ITEM_BREW_TIME
+    TARGET_BREW_TIME,                                                                                                               // STO_ITEM_TARGET_BREW_TIME
     SCALE_CALIBRATION_FACTOR,                                                                                                       // STO_ITEM_SCALE_CALIBRATION_FACTOR
     PRE_INFUSION_TIME,                                                                                                              // STO_ITEM_PRE_INFUSION_TIME
     SCALE_KNOWN_WEIGHT,                                                                                                             // STO_ITEM_SCALE_KNOWN_WEIGHT
@@ -169,7 +169,7 @@ static const sto_data_t itemDefaults PROGMEM = {
     {0xFF, 0xFF},                                                                                                                   // free to use
     "",                                                                                                                             // STO_ITEM_WIFI_SSID
     "",                                                                                                                             // STO_ITEM_WIFI_PASSWORD
-    SCALE_WEIGHTSETPOINT,                                                                                                           // STO_ITEM_WEIGHTSETPOINT
+    TARGET_BREW_WEIGHT,                                                                                                             // STO_ITEM_TARGET_BREW_WEIGHT
     STEAMKP,                                                                                                                        // STO_ITEM_PID_KP_STEAM
     STEAMSETPOINT,                                                                                                                  // STO_ITEM_STEAM_SETPOINT
     STANDBY_MODE_ON,                                                                                                                // STO_ITEM_STANDBY_MODE_ON
@@ -230,9 +230,9 @@ static inline int32_t getItemAddr(sto_item_id_t itemId, uint16_t* maxItemSize = 
             size = STRUCT_MEMBER_SIZE(sto_data_t, brewTempOffset);
             break;
 
-        case STO_ITEM_BREW_TIME:
-            addr = offsetof(sto_data_t, brewTimeMs);
-            size = STRUCT_MEMBER_SIZE(sto_data_t, brewTimeMs);
+        case STO_ITEM_TARGET_BREW_TIME:
+            addr = offsetof(sto_data_t, targetBrewTimeMs);
+            size = STRUCT_MEMBER_SIZE(sto_data_t, targetBrewTimeMs);
             break;
 
         case STO_ITEM_PRE_INFUSION_TIME:
@@ -315,9 +315,9 @@ static inline int32_t getItemAddr(sto_item_id_t itemId, uint16_t* maxItemSize = 
             size = STRUCT_MEMBER_SIZE(sto_data_t, steamkp);
             break;
 
-        case STO_ITEM_WEIGHTSETPOINT:
-            addr = offsetof(sto_data_t, weightSetpoint);
-            size = STRUCT_MEMBER_SIZE(sto_data_t, weightSetpoint);
+        case STO_ITEM_TARGET_BREW_WEIGHT:
+            addr = offsetof(sto_data_t, targetBrewWeight);
+            size = STRUCT_MEMBER_SIZE(sto_data_t, targetBrewWeight);
             break;
 
         case STO_ITEM_STEAM_SETPOINT:

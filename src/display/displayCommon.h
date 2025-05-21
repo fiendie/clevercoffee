@@ -179,9 +179,70 @@ bool shouldDisplayBrewTimer() {
 }
 
 /**
- * @brief Draw the brew time at given position
+ * @brief Draw current brew time with optional brew target time at given position
+ *
+ * Shows the current brew time in seconds. If a target time (totalTargetBrewTime) is provided (> 0), it is displayed alongside the current time.
+ *
+ * @param x              Horizontal position to start drawing
+ * @param y              Vertical position to start drawing
+ * @param label          Text label to display before the time
+ * @param currBrewTime     Current brewed time in milliseconds
+ * @param totalTargetBrewTime  Target brew time in milliseconds (optional, default -1)
  */
-void displayBrewtime(int x, int y, double brewtime) {
+void displayBrewTime(int x, int y, const char* label, double currBrewTime, double totalTargetBrewTime = -1) {
+    u8g2.setCursor(x, y);
+    u8g2.print(label);
+    u8g2.setCursor(x + 50, y);
+    u8g2.print(currBrewTime / 1000, 0);
+
+    if (totalTargetBrewTime > 0) {
+        u8g2.print("/");
+        u8g2.print(totalTargetBrewTime / 1000, 0);
+    }
+
+    u8g2.print(" s");
+}
+
+/**
+ * @brief Draw the current weight with error handling and target indicators at given position
+ *
+ * If the scale reports an error, "fault" is shown on the display instead of weight.
+ * Otherwise, the function displays the current weight.
+ * If a target weight (setpoint) is set (> 0), it will be displayed alongside the current weight.
+ * This function is intended to provide the status of the scales during brewing, flushing, or other machine states.
+ *
+ * @param x        Horizontal position to start drawing
+ * @param y        Vertical position to start drawing
+ * @param weight   Current measured weight to display
+ * @param setpoint Target weight to display alongside current weight (optional, default -1)
+ * @param fault    Indicates if the scale has an error (optional, default false)
+ */
+void displayBrewWeight(int x, int y, float weight, float setpoint = -1, bool fault = false) {
+    if (fault) {
+        u8g2.setCursor(x, y);
+        u8g2.print(langstring_weight);
+        u8g2.setCursor(x + 50, y);
+        u8g2.print(langstring_scale_Failure);
+        return;
+    }
+
+    u8g2.setCursor(x, y);
+    u8g2.print(langstring_weight);
+    u8g2.setCursor(x + 50, y);
+    u8g2.print(weight, 0);
+
+    if (setpoint > 0) {
+        u8g2.print("/");
+        u8g2.print(setpoint, 0);
+    }
+
+    u8g2.print(" g");
+}
+
+/**
+ * @brief Draw the brew time at given position (fullscreen brewtimer)
+ */
+void displayBrewtimeFs(int x, int y, double brewtime) {
     u8g2.setFont(u8g2_font_fub25_tf);
 
     if (brewtime < 10000.000) {
@@ -287,14 +348,14 @@ bool displayFullscreenBrewTimer() {
 #if (FEATURE_SCALE == 1)
         u8g2.setFont(u8g2_font_profont22_tf);
         u8g2.setCursor(64, 15);
-        u8g2.print(timeBrewed / 1000, 1);
+        u8g2.print(currBrewTime / 1000, 1);
         u8g2.print("s");
         u8g2.setCursor(64, 38);
-        u8g2.print(weightBrewed, 1);
+        u8g2.print(currBrewWeight, 1);
         u8g2.print("g");
         u8g2.setFont(u8g2_font_profont11_tf);
 #else
-        displayBrewtime(48, 25, timeBrewed);
+        displayBrewtimeFs(48, 25, currBrewTime);
 #endif
         displayWaterIcon(119, 1);
         u8g2.sendBuffer();
@@ -315,7 +376,7 @@ bool displayFullscreenManualFlushTimer() {
     if (machineState == kManualFlush) {
         u8g2.clearBuffer();
         u8g2.drawXBMP(0, 12, Manual_Flush_Logo_width, Manual_Flush_Logo_height, Manual_Flush_Logo);
-        displayBrewtime(48, 25, timeBrewed);
+        displayBrewtimeFs(48, 25, currBrewTime);
         displayWaterIcon(119, 1);
         u8g2.sendBuffer();
         return true;

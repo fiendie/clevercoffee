@@ -71,34 +71,20 @@ void printScreen() {
     if (featureBrewControl) {
         // Shown brew time
         if (shouldDisplayBrewTimer()) {
-            u8g2.setCursor(34, 36);
-            u8g2.print(langstring_brew);
-            u8g2.setCursor(84, 36);
-            u8g2.print(timeBrewed / 1000, 0);
-            u8g2.print("/");
-            u8g2.print(totalBrewTime / 1000, 0);
-            u8g2.print(" s");
+            displayBrewTime(34, 36, langstring_brew, currBrewTime, totalTargetBrewTime);
         }
         // Shown flush time while machine is flushing
         if (machineState == kManualFlush) {
             u8g2.setDrawColor(0);
-            u8g2.drawBox(34, 36, 100, 10);
+            u8g2.drawBox(34, 37, 100, 10);
             u8g2.setDrawColor(1);
-            u8g2.setCursor(34, 36);
-            u8g2.print(langstring_manual_flush);
-            u8g2.setCursor(84, 36);
-            u8g2.print(timeBrewed / 1000, 0);
-            u8g2.print(" s");
+            displayBrewTime(34, 36, langstring_manual_flush, currBrewTime);
         }
     }
     else {
         // Brew Timer with optocoupler
         if (shouldDisplayBrewTimer()) {
-            u8g2.setCursor(34, 36);
-            u8g2.print(langstring_brew);
-            u8g2.setCursor(84, 36);
-            u8g2.print(timeBrewed / 1000, 0);
-            u8g2.print(" s");
+            displayBrewTime(34, 36, langstring_brew, currBrewTime);
         }
     }
 #endif
