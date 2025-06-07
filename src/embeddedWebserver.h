@@ -19,26 +19,26 @@
 #include "LittleFS.h"
 #include <functional>
 
-AsyncWebServer server(80);
-AsyncEventSource events("/events");
+inline AsyncWebServer server(80);
+inline AsyncEventSource events("/events");
 
-double curTemp = 0.0;
-double tTemp = 0.0;
-double hPower = 0.0;
+inline double curTemp = 0.0;
+inline double tTemp = 0.0;
+inline double hPower = 0.0;
 
 #define HISTORY_LENGTH 600 // 30 mins of values (20 vals/min * 60 min) = 600 (7,2kb)
 
 static float tempHistory[3][HISTORY_LENGTH] = {0};
-int historyCurrentIndex = 0;
-int historyValueCount = 0;
+inline int historyCurrentIndex = 0;
+inline int historyValueCount = 0;
 
 void serverSetup();
 
-uint8_t flipUintValue(uint8_t value) {
+inline uint8_t flipUintValue(uint8_t value) {
     return (value + 3) % 2;
 }
 
-String getTempString() {
+inline String getTempString() {
     StaticJsonDocument<96> doc;
 
     doc["currentTemp"] = curTemp;
@@ -52,7 +52,7 @@ String getTempString() {
 }
 
 // proper modulo function (% is remainder, so will return negatives)
-int mod(int a, int b) {
+inline int mod(int a, int b) {
     int r = a % b;
     return r < 0 ? r + b : r;
 }
@@ -60,11 +60,11 @@ int mod(int a, int b) {
 // rounds a number to 2 decimal places
 // example: round(3.14159) -> 3.14
 // (less characters when serialized to json)
-double round2(double value) {
+inline double round2(double value) {
     return (int)(value * 100 + 0.5) / 100.0;
 }
 
-String getValue(String varName) {
+inline String getValue(const String& varName) {
     try {
         std::shared_ptr<Parameter> e = ParameterRegistry::getInstance().getParameterById(varName.c_str());
 
@@ -78,7 +78,7 @@ String getValue(String varName) {
     }
 }
 
-void paramToJson(String name, std::shared_ptr<Parameter> param, DynamicJsonDocument& doc) {
+inline void paramToJson(const String& name, const std::shared_ptr<Parameter>& param, DynamicJsonDocument& doc) {
     JsonObject paramObj = doc.createNestedObject();
     paramObj["type"] = param->getType();
     paramObj["name"] = name;
@@ -90,16 +90,16 @@ void paramToJson(String name, std::shared_ptr<Parameter> param, DynamicJsonDocum
 
     // set parameter value using the appropriate method based on type
     if (param->getType() == kInteger) {
-        paramObj["value"] = (int)param->getValue();
+        paramObj["value"] = static_cast<int>(param->getValue());
     }
     else if (param->getType() == kUInt8) {
-        paramObj["value"] = (uint8_t)param->getValue();
+        paramObj["value"] = static_cast<uint8_t>(param->getValue());
     }
     else if (param->getType() == kDouble || param->getType() == kDoubletime) {
         paramObj["value"] = round2(param->getValue());
     }
     else if (param->getType() == kFloat) {
-        paramObj["value"] = round2((float)param->getValue());
+        paramObj["value"] = round2(static_cast<float>(param->getValue()));
     }
     else if (param->getType() == kCString) {
         paramObj["value"] = param->getStringValue();
@@ -118,7 +118,7 @@ constexpr unsigned int str2int(const char* str, int h = 0) {
     return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
-String getHeader(String varName) {
+inline String getHeader(const String& varName) {
     switch (str2int(varName.c_str())) {
         case (str2int("FONTAWESOME")):
 #if NOINTERNET == 1
@@ -162,7 +162,7 @@ String getHeader(String varName) {
     return "";
 }
 
-String staticProcessor(const String& var) {
+inline String staticProcessor(const String& var) {
     // try replacing var for variables in ParameterRegistry
     if (var.startsWith("VAR_SHOW_")) {
         return getValue(var.substring(9));   // cut off "VAR_SHOW_"
@@ -193,10 +193,10 @@ String staticProcessor(const String& var) {
     }
 
     // didn't find a value for the var, replace var with empty string
-    return String();
+    return {};
 }
 
-void serverSetup() {
+inline void serverSetup() {
     // set up dynamic routes (endpoints)
 
     server.on("/toggleSteam", HTTP_POST, [](AsyncWebServerRequest* request) {
@@ -452,7 +452,7 @@ void serverSetup() {
             LOGF(DEBUG, "Reconnected, last message ID was: %u", client->lastId());
         }
 
-        client->send("hello", NULL, millis(), 10000);
+        client->send("hello", nullptr, millis(), 10000);
     });
 
     server.addHandler(&events);
@@ -472,10 +472,10 @@ void serverSetup() {
 }
 
 // skip counter so we don't keep a value every second
-int skippedValues = 0;
+inline int skippedValues = 0;
 #define SECONDS_TO_SKIP 2
 
-void sendTempEvent(double currentTemp, double targetTemp, double heaterPower) {
+inline void sendTempEvent(double currentTemp, double targetTemp, double heaterPower) {
     curTemp = currentTemp;
     tTemp = targetTemp;
     hPower = heaterPower;
@@ -496,6 +496,6 @@ void sendTempEvent(double currentTemp, double targetTemp, double heaterPower) {
         skippedValues++;
     }
 
-    events.send("ping", NULL, millis());
+    events.send("ping", nullptr, millis());
     events.send(getTempString().c_str(), "new_temps", millis());
 }

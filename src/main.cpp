@@ -280,9 +280,7 @@ std::map<const char*, std::function<double()>, cmp_str> mqttSensors = {};
 unsigned long lastTempEvent = 0;
 unsigned long tempEventInterval = 1000;
 
-#if MQTT_HASSIO_SUPPORT == 1
 Timer hassioDiscoveryTimer(&sendHASSIODiscoveryMsg, 300000);
-#endif
 
 bool mqtt_was_connected = false;
 
@@ -893,46 +891,48 @@ void setup() {
     Wire.begin();
 #endif
 
-#if (FEATURE_MQTT == 1)
-    // Editable values reported to MQTT
-    mqttVars["pidON"] = "PID_ON";
-    mqttVars["brewSetpoint"] = "BREW_SETPOINT";
-    mqttVars["brewTempOffset"] = "BREW_TEMP_OFFSET";
-    mqttVars["steamON"] = "STEAM_MODE";
-    mqttVars["steamSetpoint"] = "STEAM_SETPOINT";
-    mqttVars["pidUsePonM"] = "PID_USE_PONM";
-    mqttVars["aggKp"] = "PID_KP";
-    mqttVars["aggTn"] = "PID_TN";
-    mqttVars["aggTv"] = "PID_TV";
-    mqttVars["aggIMax"] = "PID_I_MAX";
-    mqttVars["steamKp"] = "STEAM_KP";
-    mqttVars["standbyModeOn"] = "STANDBY_MODE_ON";
-    mqttVars["aggbKp"] = "PID_BD_KP";
-    mqttVars["aggbTn"] = "PID_BD_TN";
-    mqttVars["aggbTv"] = "PID_BD_TV";
+    setupMqtt();
 
-    // Values reported to MQTT
-    mqttSensors["temperature"] = [] { return temperature; };
-    mqttSensors["heaterPower"] = [] { return pidOutput / 10; };
-    mqttSensors["standbyModeTimeRemaining"] = [] { return standbyModeRemainingTimeMillis / 1000; };
-    mqttSensors["currentKp"] = [] { return bPID.GetKp(); };
-    mqttSensors["currentKi"] = [] { return bPID.GetKi(); };
-    mqttSensors["currentKd"] = [] { return bPID.GetKd(); };
-    mqttSensors["machineState"] = [] { return machineState; };
+    if (mqtt_enabled) {
+        // Editable values reported to MQTT
+        mqttVars["pidON"] = "PID_ON";
+        mqttVars["brewSetpoint"] = "BREW_SETPOINT";
+        mqttVars["brewTempOffset"] = "BREW_TEMP_OFFSET";
+        mqttVars["steamON"] = "STEAM_MODE";
+        mqttVars["steamSetpoint"] = "STEAM_SETPOINT";
+        mqttVars["pidUsePonM"] = "PID_USE_PONM";
+        mqttVars["aggKp"] = "PID_KP";
+        mqttVars["aggTn"] = "PID_TN";
+        mqttVars["aggTv"] = "PID_TV";
+        mqttVars["aggIMax"] = "PID_I_MAX";
+        mqttVars["steamKp"] = "STEAM_KP";
+        mqttVars["standbyModeOn"] = "STANDBY_MODE_ON";
+        mqttVars["aggbKp"] = "PID_BD_KP";
+        mqttVars["aggbTn"] = "PID_BD_TN";
+        mqttVars["aggbTv"] = "PID_BD_TV";
+
+        // Values reported to MQTT
+        mqttSensors["temperature"] = [] { return temperature; };
+        mqttSensors["heaterPower"] = [] { return pidOutput / 10; };
+        mqttSensors["standbyModeTimeRemaining"] = [] { return standbyModeRemainingTimeMillis / 1000; };
+        mqttSensors["currentKp"] = [] { return bPID.GetKp(); };
+        mqttSensors["currentKi"] = [] { return bPID.GetKi(); };
+        mqttSensors["currentKd"] = [] { return bPID.GetKd(); };
+        mqttSensors["machineState"] = [] { return machineState; };
 
 #if FEATURE_BREWSWITCH == 1
-    mqttVars["pidUseBD"] = "PID_BD_ON";
-    mqttVars["brewPidDelay"] = "PID_BD_DELAY";
-    mqttSensors["currBrewTime"] = [] { return currBrewTime / 1000; };
-    mqttVars["targetBrewTime"] = "TARGET_BREW_TIME";
-    mqttVars["preinfusion"] = "BREW_PREINFUSION";
-    mqttVars["preinfusionPause"] = "BREW_PREINFUSIONPAUSE";
-    mqttVars["backflushOn"] = "BACKFLUSH_ON";
-    mqttVars["backflushCycles"] = "BACKFLUSH_CYCLES";
-    mqttVars["backflushFillTime"] = "BACKFLUSH_FILL_TIME";
-    mqttVars["backflushFlushTime"] = "BACKFLUSH_FLUSH_TIME";
+        mqttVars["pidUseBD"] = "PID_BD_ON";
+        mqttVars["brewPidDelay"] = "PID_BD_DELAY";
+        mqttSensors["currBrewTime"] = [] { return currBrewTime / 1000; };
+        mqttVars["targetBrewTime"] = "TARGET_BREW_TIME";
+        mqttVars["preinfusion"] = "BREW_PREINFUSION";
+        mqttVars["preinfusionPause"] = "BREW_PREINFUSIONPAUSE";
+        mqttVars["backflushOn"] = "BACKFLUSH_ON";
+        mqttVars["backflushCycles"] = "BACKFLUSH_CYCLES";
+        mqttVars["backflushFillTime"] = "BACKFLUSH_FILL_TIME";
+        mqttVars["backflushFlushTime"] = "BACKFLUSH_FLUSH_TIME";
 #endif
-#endif
+    }
 
 #if FEATURE_SCALE == 1
     mqttVars["targetBrewWeight"] = "SCALE_TARGET_BREW_WEIGHT";
@@ -1012,15 +1012,17 @@ void setup() {
             ArduinoOTA.begin();
         }
 
-        if (FEATURE_MQTT == 1) {
-            snprintf(topic_will, sizeof(topic_will), "%s%s/%s", mqtt_topic_prefix, hostname, "status");
-            snprintf(topic_set, sizeof(topic_set), "%s%s/+/%s", mqtt_topic_prefix, hostname, "set");
-            mqtt.setServer(mqtt_server_ip, mqtt_server_port);
+        if (mqtt_enabled) {
+            snprintf(topic_will, sizeof(topic_will), "%s%s/%s", mqtt_topic_prefix.c_str(), hostname, "status");
+            snprintf(topic_set, sizeof(topic_set), "%s%s/+/%s", mqtt_topic_prefix.c_str(), hostname, "set");
+            mqtt.setServer(mqtt_server_ip.c_str(), mqtt_server_port);
             mqtt.setCallback(mqtt_callback);
+
             checkMQTT();
-#if MQTT_HASSIO_SUPPORT == 1 // Send Home Assistant MQTT discovery messages
-            sendHASSIODiscoveryMsg();
-#endif
+
+            if (mqtt_hassio_enabled) {
+                sendHASSIODiscoveryMsg();
+            }
         }
     }
     else if (connectmode == 0) {
@@ -1099,15 +1101,17 @@ void loop() {
 void looppid() {
     // Only do Wifi stuff, if Wifi is connected
     if (WiFi.status() == WL_CONNECTED && offlineMode == 0) {
-        if (FEATURE_MQTT == 1) {
+        if (mqtt_enabled) {
             checkMQTT();
             writeSysParamsToMQTT(true); // Continue on error
 
             if (mqtt.connected() == 1) {
                 mqtt.loop();
-#if MQTT_HASSIO_SUPPORT == 1
-                hassioDiscoveryTimer();
-#endif
+
+                if (mqtt_hassio_enabled) {
+                    hassioDiscoveryTimer();
+                }
+
                 mqtt_was_connected = true;
             }
             // Supress debug messages until we have a connection etablished

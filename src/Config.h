@@ -106,6 +106,16 @@ class Config {
             _doc["features"]["heating_logo"] = FEATURE_HEATING_LOGO;
             _doc["features"]["pid_off_logo"] = FEATURE_PID_OFF_LOGO;
 
+            // MQTT
+            _doc["mqtt"]["enabled"] = 0;
+            _doc["mqtt"]["broker"] = "";
+            _doc["mqtt"]["port"] = 1883;
+            _doc["mqtt"]["username"] = "rancilio";
+            _doc["mqtt"]["password"] = "silvia";
+            _doc["mqtt"]["topic"] = "custom/kitchen.";
+            _doc["mqtt"]["hassio"]["enabled"] = 0;
+            _doc["mqtt"]["hassio"]["prefix"] = "homeassistant";
+
             // WiFi credentials flag
             _doc["wifi"]["credentials_saved"] = 0;
         }
@@ -130,7 +140,7 @@ class Config {
                 return false;
             }
 
-            DeserializationError error = deserializeJson(_doc, file);
+            const DeserializationError error = deserializeJson(_doc, file);
             file.close();
 
             if (error) {
@@ -148,7 +158,7 @@ class Config {
          *
          * @return true if successful, false otherwise
          */
-        bool save() {
+        bool save() const {
             File file = LittleFS.open(CONFIG_FILE, "w");
 
             if (!file) {
@@ -183,17 +193,25 @@ class Config {
             return _doc["wifi"]["credentials_saved"] | 0;
         }
 
-        void setWifiCredentialsSaved(bool value) {
+        void setWifiCredentialsSaved(const bool value) {
             _doc["wifi"]["credentials_saved"] = value ? 1 : 0;
         }
 
-        // Parameter getters - PID general
+        // PID general
         bool getPidEnabled() {
             return _doc["pid"]["enabled"] | 0;
         }
 
+        void setPidEnabled(const bool value) {
+            _doc["pid"]["enabled"] = value ? 1 : 0;
+        }
+
         bool getUsePonM() {
             return _doc["pid"]["use_ponm"] | 0;
+        }
+
+        void setUsePonM(const bool value) {
+            _doc["pid"]["use_ponm"] = value ? 1 : 0;
         }
 
         // PID regular
@@ -201,16 +219,32 @@ class Config {
             return _doc["pid"]["regular"]["kp"] | AGGKP;
         }
 
+        void setPidKpRegular(const double value) {
+            _doc["pid"]["regular"]["kp"] = constrain(value, PID_KP_REGULAR_MIN, PID_KP_REGULAR_MAX);
+        }
+
         double getPidTnRegular() {
             return _doc["pid"]["regular"]["tn"] | AGGTN;
+        }
+
+        void setPidTnRegular(const double value) {
+            _doc["pid"]["regular"]["tn"] = constrain(value, PID_TN_REGULAR_MIN, PID_TN_REGULAR_MAX);
         }
 
         double getPidTvRegular() {
             return _doc["pid"]["regular"]["tv"] | AGGTV;
         }
 
+        void setPidTvRegular(const double value) {
+            _doc["pid"]["regular"]["tv"] = constrain(value, PID_TV_REGULAR_MIN, PID_TV_REGULAR_MAX);
+        }
+
         double getPidIMaxRegular() {
             return _doc["pid"]["regular"]["i_max"] | AGGIMAX;
+        }
+
+        void setPidIMaxRegular(const double value) {
+            _doc["pid"]["regular"]["i_max"] = constrain(value, PID_I_MAX_REGULAR_MIN, PID_I_MAX_REGULAR_MAX);
         }
 
         // PID brew detection
@@ -218,16 +252,32 @@ class Config {
             return _doc["pid"]["bd"]["enabled"] | 0;
         }
 
+        void setUseBDPID(const bool value) {
+            _doc["pid"]["bd"]["enabled"] = value ? 1 : 0;
+        }
+
         double getPidKpBD() {
             return _doc["pid"]["bd"]["kp"] | AGGBKP;
+        }
+
+        void setPidKpBD(const double value) {
+            _doc["pid"]["bd"]["kp"] = constrain(value, PID_KP_BD_MIN, PID_KP_BD_MAX);
         }
 
         double getPidTnBD() {
             return _doc["pid"]["bd"]["tn"] | AGGBTN;
         }
 
+        void setPidTnBD(const double value) {
+            _doc["pid"]["bd"]["tn"] = constrain(value, PID_TN_BD_MIN, PID_TN_BD_MAX);
+        }
+
         double getPidTvBD() {
             return _doc["pid"]["bd"]["tv"] | AGGBTV;
+        }
+
+        void setPidTvBD(const double value) {
+            _doc["pid"]["bd"]["tv"] = constrain(value, PID_TV_BD_MIN, PID_TV_BD_MAX);
         }
 
         // PID steam
@@ -235,25 +285,49 @@ class Config {
             return _doc["pid"]["steam"]["kp"] | STEAMKP;
         }
 
+        void setPidKpSteam(const double value) {
+            _doc["pid"]["steam"]["kp"] = constrain(value, PID_KP_STEAM_MIN, PID_KP_STEAM_MAX);
+        }
+
         // Brew settings
         double getBrewSetpoint() {
             return _doc["brew"]["setpoint"] | SETPOINT;
+        }
+
+        void setBrewSetpoint(const double value) {
+            _doc["brew"]["setpoint"] = constrain(value, BREW_SETPOINT_MIN, BREW_SETPOINT_MAX);
         }
 
         double getBrewTempOffset() {
             return _doc["brew"]["temp_offset"] | TEMPOFFSET;
         }
 
+        void setBrewTempOffset(const double value) {
+            _doc["brew"]["temp_offset"] = constrain(value, BREW_TEMP_OFFSET_MIN, BREW_TEMP_OFFSET_MAX);
+        }
+
         double getBrewPIDDelay() {
             return _doc["brew"]["pid_delay"] | BREW_PID_DELAY;
+        }
+
+        void setBrewPIDDelay(const double value) {
+            _doc["brew"]["pid_delay"] = constrain(value, BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX);
         }
 
         double getTargetBrewTime() {
             return _doc["brew"]["target_time"] | TARGET_BREW_TIME;
         }
 
+        void setTargetBrewTime(const double value) {
+            _doc["brew"]["target_time"] = constrain(value, TARGET_BREW_TIME_MIN, TARGET_BREW_TIME_MAX);
+        }
+
         double getTargetBrewWeight() {
             return _doc["brew"]["target_weight"] | TARGET_BREW_WEIGHT;
+        }
+
+        void setTargetBrewWeight(const double value) {
+            _doc["brew"]["target_weight"] = constrain(value, TARGET_BREW_WEIGHT_MIN, TARGET_BREW_WEIGHT_MAX);
         }
 
         // Pre-infusion
@@ -261,8 +335,16 @@ class Config {
             return _doc["brew"]["pre_infusion"]["time"] | PRE_INFUSION_TIME;
         }
 
+        void setPreInfusionTime(const double value) {
+            _doc["brew"]["pre_infusion"]["time"] = constrain(value, PRE_INFUSION_TIME_MIN, PRE_INFUSION_TIME_MAX);
+        }
+
         double getPreInfusionPause() {
             return _doc["brew"]["pre_infusion"]["pause"] | PRE_INFUSION_PAUSE_TIME;
+        }
+
+        void setPreInfusionPause(const double value) {
+            _doc["brew"]["pre_infusion"]["pause"] = constrain(value, PRE_INFUSION_PAUSE_MIN, PRE_INFUSION_PAUSE_MAX);
         }
 
         // Steam
@@ -270,17 +352,33 @@ class Config {
             return _doc["steam"]["setpoint"] | STEAMSETPOINT;
         }
 
+        void setSteamSetpoint(const double value) {
+            _doc["steam"]["setpoint"] = constrain(value, STEAM_SETPOINT_MIN, STEAM_SETPOINT_MAX);
+        }
+
         // Scale
         float getScaleCalibration() {
             return _doc["scale"]["calibration"] | static_cast<float>(SCALE_CALIBRATION_FACTOR);
+        }
+
+        void setScaleCalibration(const float value) {
+            _doc["scale"]["calibration"] = constrain(value, -100000.0f, 100000.0f);
+        }
+
+        void setScaleKnownWeight(const float value) {
+            _doc["scale"]["known_weight"] = constrain(value, 0.0f, 2000.0f);
+        }
+
+        float getScaleKnownWeight() {
+            return _doc["scale"]["known_weight"] | static_cast<float>(SCALE_KNOWN_WEIGHT);
         }
 
         float getScale2Calibration() {
             return _doc["scale"]["calibration2"] | static_cast<float>(SCALE_CALIBRATION_FACTOR);
         }
 
-        float getScaleKnownWeight() {
-            return _doc["scale"]["known_weight"] | static_cast<float>(SCALE_KNOWN_WEIGHT);
+        void setScale2Calibration(const float value) {
+            _doc["scale"]["calibration2"] = constrain(value, -100000.0f, 100000.0f);
         }
 
         // Backflushing
@@ -288,12 +386,24 @@ class Config {
             return _doc["backflush"]["cycles"] | BACKFLUSH_CYCLES;
         }
 
+        void setBackflushCycles(const int value) {
+            _doc["backflush"]["cycles"] = constrain(value, BACKFLUSH_CYCLES_MIN, BACKFLUSH_CYCLES_MAX);
+        }
+
         double getBackflushFillTime() {
             return _doc["backflush"]["fill_time"] | BACKFLUSH_FILL_TIME;
         }
 
+        void setBackflushFillTime(const double value) {
+            _doc["backflush"]["fill_time"] = constrain(value, BACKFLUSH_FILL_TIME_MIN, BACKFLUSH_FILL_TIME_MAX);
+        }
+
         double getBackflushFlushTime() {
             return _doc["backflush"]["flush_time"] | BACKFLUSH_FLUSH_TIME;
+        }
+
+        void setBackflushFlushTime(const double value) {
+            _doc["backflush"]["flush_time"] = constrain(value, BACKFLUSH_FLUSH_TIME_MIN, BACKFLUSH_FLUSH_TIME_MAX);
         }
 
         // Standby
@@ -301,8 +411,16 @@ class Config {
             return _doc["standby"]["enabled"] | STANDBY_MODE_ON;
         }
 
+        void setStandbyModeOn(const bool value) {
+            _doc["standby"]["enabled"] = value ? 1 : 0;
+        }
+
         double getStandbyModeTime() {
             return _doc["standby"]["time"] | STANDBY_MODE_TIME;
+        }
+
+        void setStandbyModeTime(const double value) {
+            _doc["standby"]["time"] = constrain(value, STANDBY_MODE_TIME_MIN, STANDBY_MODE_TIME_MAX);
         }
 
         // Features
@@ -310,170 +428,127 @@ class Config {
             return _doc["features"]["brew_control"] | FEATURE_BREW_CONTROL;
         }
 
+        void setFeatureBrewControl(const bool value) {
+            _doc["features"]["brew_control"] = value ? 1 : 0;
+        }
+
         bool getFeatureFullscreenBrewTimer() {
             return _doc["features"]["fullscreen_brew_timer"] | FEATURE_FULLSCREEN_BREW_TIMER;
+        }
+
+        void setFeatureFullscreenBrewTimer(const bool value) {
+            _doc["features"]["fullscreen_brew_timer"] = value ? 1 : 0;
         }
 
         bool getFeatureFullscreenManualFlushTimer() {
             return _doc["features"]["fullscreen_manual_flush_timer"] | FEATURE_FULLSCREEN_MANUAL_FLUSH_TIMER;
         }
 
+        void setFeatureFullscreenManualFlushTimer(const bool value) {
+            _doc["features"]["fullscreen_manual_flush_timer"] = value ? 1 : 0;
+        }
+
         double getPostBrewTimerDuration() {
             return _doc["features"]["post_brew_timer_duration"] | POST_BREW_TIMER_DURATION;
+        }
+
+        void setPostBrewTimerDuration(const double value) {
+            _doc["features"]["post_brew_timer_duration"] = constrain(value, POST_BREW_TIMER_DURATION_MIN, POST_BREW_TIMER_DURATION_MAX);
         }
 
         bool getFeatureHeatingLogo() {
             return _doc["features"]["heating_logo"] | FEATURE_HEATING_LOGO;
         }
 
+        void setFeatureHeatingLogo(const bool value) {
+            _doc["features"]["heating_logo"] = value ? 1 : 0;
+        }
+
         bool getFeaturePidOffLogo() {
             return _doc["features"]["pid_off_logo"] | FEATURE_PID_OFF_LOGO;
         }
 
-        // Parameter setters - PID general
-        void setPidEnabled(bool value) {
-            _doc["pid"]["enabled"] = value ? 1 : 0;
-        }
-
-        void setUsePonM(bool value) {
-            _doc["pid"]["use_ponm"] = value ? 1 : 0;
-        }
-
-        // PID regular
-        void setPidKpRegular(double value) {
-            _doc["pid"]["regular"]["kp"] = constrain(value, PID_KP_REGULAR_MIN, PID_KP_REGULAR_MAX);
-        }
-
-        void setPidTnRegular(double value) {
-            _doc["pid"]["regular"]["tn"] = constrain(value, PID_TN_REGULAR_MIN, PID_TN_REGULAR_MAX);
-        }
-
-        void setPidTvRegular(double value) {
-            _doc["pid"]["regular"]["tv"] = constrain(value, PID_TV_REGULAR_MIN, PID_TV_REGULAR_MAX);
-        }
-
-        void setPidIMaxRegular(double value) {
-            _doc["pid"]["regular"]["i_max"] = constrain(value, PID_I_MAX_REGULAR_MIN, PID_I_MAX_REGULAR_MAX);
-        }
-
-        // PID brew detection
-        void setUseBDPID(bool value) {
-            _doc["pid"]["bd"]["enabled"] = value ? 1 : 0;
-        }
-
-        void setPidKpBD(double value) {
-            _doc["pid"]["bd"]["kp"] = constrain(value, PID_KP_BD_MIN, PID_KP_BD_MAX);
-        }
-
-        void setPidTnBD(double value) {
-            _doc["pid"]["bd"]["tn"] = constrain(value, PID_TN_BD_MIN, PID_TN_BD_MAX);
-        }
-
-        void setPidTvBD(double value) {
-            _doc["pid"]["bd"]["tv"] = constrain(value, PID_TV_BD_MIN, PID_TV_BD_MAX);
-        }
-
-        // PID steam
-        void setPidKpSteam(double value) {
-            _doc["pid"]["steam"]["kp"] = constrain(value, PID_KP_STEAM_MIN, PID_KP_STEAM_MAX);
-        }
-
-        // Brew settings
-        void setBrewSetpoint(double value) {
-            _doc["brew"]["setpoint"] = constrain(value, BREW_SETPOINT_MIN, BREW_SETPOINT_MAX);
-        }
-
-        void setBrewTempOffset(double value) {
-            _doc["brew"]["temp_offset"] = constrain(value, BREW_TEMP_OFFSET_MIN, BREW_TEMP_OFFSET_MAX);
-        }
-
-        void setBrewPIDDelay(double value) {
-            _doc["brew"]["pid_delay"] = constrain(value, BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX);
-        }
-
-        void setTargetBrewTime(double value) {
-            _doc["brew"]["target_time"] = constrain(value, TARGET_BREW_TIME_MIN, TARGET_BREW_TIME_MAX);
-        }
-
-        void setTargetBrewWeight(double value) {
-            _doc["brew"]["target_weight"] = constrain(value, TARGET_BREW_WEIGHT_MIN, TARGET_BREW_WEIGHT_MAX);
-        }
-
-        // Pre-infusion
-        void setPreInfusionTime(double value) {
-            _doc["brew"]["pre_infusion"]["time"] = constrain(value, PRE_INFUSION_TIME_MIN, PRE_INFUSION_TIME_MAX);
-        }
-
-        void setPreInfusionPause(double value) {
-            _doc["brew"]["pre_infusion"]["pause"] = constrain(value, PRE_INFUSION_PAUSE_MIN, PRE_INFUSION_PAUSE_MAX);
-        }
-
-        // Steam
-        void setSteamSetpoint(double value) {
-            _doc["steam"]["setpoint"] = constrain(value, STEAM_SETPOINT_MIN, STEAM_SETPOINT_MAX);
-        }
-
-        // Scale
-        void setScaleCalibration(float value) {
-            _doc["scale"]["calibration"] = constrain(value, -100000.0f, 100000.0f);
-        }
-
-        void setScale2Calibration(float value) {
-            _doc["scale"]["calibration2"] = constrain(value, -100000.0f, 100000.0f);
-        }
-
-        void setScaleKnownWeight(float value) {
-            _doc["scale"]["known_weight"] = constrain(value, 0.0f, 2000.0f);
-        }
-
-        // Backflushing
-        void setBackflushCycles(int value) {
-            _doc["backflush"]["cycles"] = constrain(value, BACKFLUSH_CYCLES_MIN, BACKFLUSH_CYCLES_MAX);
-        }
-
-        void setBackflushFillTime(double value) {
-            _doc["backflush"]["fill_time"] = constrain(value, BACKFLUSH_FILL_TIME_MIN, BACKFLUSH_FILL_TIME_MAX);
-        }
-
-        void setBackflushFlushTime(double value) {
-            _doc["backflush"]["flush_time"] = constrain(value, BACKFLUSH_FLUSH_TIME_MIN, BACKFLUSH_FLUSH_TIME_MAX);
-        }
-
-        // Standby
-        void setStandbyModeOn(bool value) {
-            _doc["standby"]["enabled"] = value ? 1 : 0;
-        }
-
-        void setStandbyModeTime(double value) {
-            _doc["standby"]["time"] = constrain(value, STANDBY_MODE_TIME_MIN, STANDBY_MODE_TIME_MAX);
-        }
-
-        // Features
-        void setFeatureBrewControl(bool value) {
-            _doc["features"]["brew_control"] = value ? 1 : 0;
-        }
-
-        void setFeatureFullscreenBrewTimer(bool value) {
-            _doc["features"]["fullscreen_brew_timer"] = value ? 1 : 0;
-        }
-
-        void setFeatureFullscreenManualFlushTimer(bool value) {
-            _doc["features"]["fullscreen_manual_flush_timer"] = value ? 1 : 0;
-        }
-
-        void setPostBrewTimerDuration(double value) {
-            _doc["features"]["post_brew_timer_duration"] = constrain(value, POST_BREW_TIMER_DURATION_MIN, POST_BREW_TIMER_DURATION_MAX);
-        }
-
-        void setFeatureHeatingLogo(bool value) {
-            _doc["features"]["heating_logo"] = value ? 1 : 0;
-        }
-
-        void setFeaturePidOffLogo(bool value) {
+        void setFeaturePidOffLogo(const bool value) {
             _doc["features"]["pid_off_logo"] = value ? 1 : 0;
         }
 
+        // MQTT
+        bool getMqttEnabled() {
+            return _doc["mqtt"]["enabled"] | 0;
+        }
+
+        void setMqttEnabled(const bool value) {
+            _doc["mqtt"]["enabled"] = value ? 1 : 0;
+        }
+
+        String getMqttBroker() {
+            return _doc["mqtt"]["broker"];
+        }
+
+        void setMqttBroker(const String& value) {
+            _doc["mqtt"]["broker"] = constrainStringParameter(value, MQTT_BROKER_MAX_LENGTH, "mqtt.broker");
+        }
+
+        int getMqttPort() {
+            return _doc["mqtt"]["port"];
+        }
+
+        void setMqttPort(const int value) {
+            _doc["mqtt"]["port"] = value;
+        }
+
+        String getMqttUsername() {
+            return _doc["mqtt"]["username"];
+        }
+
+        void setMqttUsername(const String& value) {
+            _doc["mqtt"]["username"] = constrainStringParameter(value, MQTT_USERNAME_MAX_LENGTH, "mqtt.username");
+        }
+
+        String getMqttPassword() {
+            return _doc["mqtt"]["password"];
+        }
+
+        void setMqttPassword(const String& value) {
+            _doc["mqtt"]["password"] = constrainStringParameter(value, MQTT_PASSWORD_MAX_LENGTH, "mqtt.password");
+        }
+
+        String getMqttTopic() {
+            return _doc["mqtt"]["topic"];
+        }
+
+        void setMqttTopic(const String& value) {
+            _doc["mqtt"]["topic"] = constrainStringParameter(value, MQTT_TOPIC_MAX_LENGTH, "mqtt.topic");
+        }
+
+        bool getMqttHassioEnabled() {
+            return _doc["mqtt"]["hassio"]["enabled"] | 0;
+        }
+
+        void setMqttHassioEnabled(const bool value) {
+            _doc["mqtt"]["hassio"]["enabled"] = value ? 1 : 0;
+        }
+
+        String getMqttHassioPrefix() {
+            return _doc["mqtt"]["hassio"]["prefix"];
+        }
+
+        void setMqttHassioPrefix(const String& value) {
+            _doc["mqtt"]["hassio"]["prefix"] = constrainStringParameter(value, MQTT_HASSIO_PREFIX_MAX_LENGTH, "mqtt.hassio.prefix");
+        }
+
     private:
-        static const char* CONFIG_FILE;
+        inline static auto CONFIG_FILE = "/config.json";
+
         StaticJsonDocument<4096> _doc;
+
+        static String constrainStringParameter(const String& value, const size_t maxLength, const char* paramName = nullptr) {
+            if (value.length() <= maxLength) {
+                return value;
+            }
+
+            LOGF(WARNING, "Parameter '%s' truncated from %d to %d characters", paramName, value.length(), maxLength);
+
+            return value.substring(0, maxLength);
+        }
 };

@@ -510,8 +510,39 @@ void ParameterRegistry::initialize(Config& config) {
         0, 1, true, "full screen logo will be shown if pid is disabled", []() { return true; }, nullptr, nullptr, &featurePidOffLogo));
 
     addParam(std::make_shared<Parameter>(
-        "VERSION", "Version", kCString, sOtherSection, 40, [&]() { return 0; }, [](double val) {}, // Empty setter - read-only
-        0, 1, false, "", []() { return false; },
+        "MQTT_ENABLED", "MQTT enabled", kUInt8, sMqttSection, 41, [&config]() { return config.getMqttEnabled(); }, [&config](const double val) { config.setMqttEnabled(val != 0); }, 0, 1, true,
+        "Enables MQTT, requires a restart", []() -> bool { return true; }, nullptr, nullptr, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_BROKER", "Hostname", kCString, sMqttSection, 42, nullptr, nullptr, 0, 0, true, "IP addresss or hostname of your MQTT broker, changes require a restart", []() -> bool { return true; },
+        [&config]() { return config.getMqttBroker(); }, [&config](const String& val) { config.setMqttBroker(val); }, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_PORT", "Port", kInteger, sMqttSection, 43, [&config]() { return config.getMqttPort(); }, [&config](const double val) { config.setMqttPort(val); }, 0, 99999, true,
+        "Port number of your MQTT broker, changes require a restart", []() -> bool { return true; }, nullptr, nullptr, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_USERNAME", "Username", kCString, sMqttSection, 44, nullptr, nullptr, 0, 0, true, "Username for your MQTT broker, changes require a restart", []() -> bool { return true; },
+        [&config]() { return config.getMqttUsername(); }, [&config](const String& val) { config.setMqttUsername(val); }, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_PASSWORD", "Password", kCString, sMqttSection, 45, nullptr, nullptr, 0, 0, true, "Password for your MQTT broker, changes require a restart", []() -> bool { return true; },
+        [&config]() { return config.getMqttPassword(); }, [&config](const String& val) { config.setMqttPassword(val); }, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_TOPIC", "Topic Prefix", kCString, sMqttSection, 45, nullptr, nullptr, 0, 0, true, "Custom MQTT topic prefix, changes require a restart", []() -> bool { return true; },
+        [&config]() { return config.getMqttTopic(); }, [&config](const String& val) { config.setMqttTopic(val); }, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_HASSIO_ENABLED", "Hass.io enabled", kUInt8, sMqttSection, 46, [&config]() { return config.getMqttHassioEnabled(); }, [&config](const double val) { config.setMqttHassioEnabled(val != 0); }, 0, 1, true,
+        "Enables Home Assistant integration, requires a restart", []() -> bool { return true; }, nullptr, nullptr, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "MQTT_HASSIO_PREFIX", "Hass.io Prefix", kCString, sMqttSection, 47, nullptr, nullptr, 0, 0, true, "Custom MQTT topic prefix, changes require a restart", []() -> bool { return true; },
+        [&config]() { return config.getMqttHassioPrefix(); }, [&config](const String& val) { config.setMqttHassioPrefix(val); }, nullptr));
+
+    addParam(std::make_shared<Parameter>(
+        "VERSION", "Version", kCString, sOtherSection, 48, [&]() { return 0; }, [](double val) {}, 0, 1, false, "", []() { return false; },
         []() {
             // Get version directly from build defines or return a placeholder
             return String("CleverCoffee v" + String(__DATE__) + " " + String(__TIME__));

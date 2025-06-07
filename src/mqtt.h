@@ -13,23 +13,26 @@
 #include <PubSubClient.h>
 #include <os.h>
 
-unsigned long previousMillisMQTT;
-const unsigned long intervalMQTT = 5000;
+inline unsigned long previousMillisMQTT;
+constexpr unsigned long intervalMQTT = 5000;
 
-WiFiClient net;
-PubSubClient mqtt(net);
+inline WiFiClient net;
+inline PubSubClient mqtt(net);
 
-const char* mqtt_server_ip = MQTT_SERVER_IP;
-const int mqtt_server_port = MQTT_SERVER_PORT;
-const char* mqtt_username = MQTT_USERNAME;
-const char* mqtt_password = MQTT_PASSWORD;
-const char* mqtt_topic_prefix = MQTT_TOPIC_PREFIX;
+inline bool mqtt_enabled = false;
+inline String mqtt_server_ip = "";
+inline int mqtt_server_port = 1883;
+inline String mqtt_username = "";
+inline String mqtt_password = "";
+inline String mqtt_topic_prefix = "";
+inline bool mqtt_hassio_enabled = false;
+inline String mqtt_hassio_discovery_prefix = "";
 
-char topic_will[256];
-char topic_set[256];
+inline char topic_will[256];
+inline char topic_set[256];
 
-unsigned long lastMQTTConnectionAttempt = millis();
-unsigned int MQTTReCnctCount = 0;
+inline unsigned long lastMQTTConnectionAttempt = millis();
+inline unsigned int MQTTReCnctCount = 0;
 
 extern std::map<const char*, const char*, cmp_str> mqttVars;
 extern std::map<const char*, std::function<double()>, cmp_str> mqttSensors;
@@ -38,6 +41,24 @@ struct DiscoveryObject {
         String discovery_topic;
         String payload_json;
 };
+
+inline void setupMqtt() {
+    ParameterRegistry& registry = ParameterRegistry::getInstance();
+
+    if (!registry.isReady()) {
+        LOGF(ERROR, "ParameterRegistry not ready, cannot initialize MQTT");
+        return;
+    }
+
+    mqtt_enabled = registry.getParameterById("MQTT_ENABLED")->getBoolValue();
+    mqtt_server_ip = registry.getParameterById("MQTT_BROKER")->getStringValue();
+    mqtt_server_port = registry.getParameterById("MQTT_PORT")->getIntValue();
+    mqtt_username = registry.getParameterById("MQTT_USERNAME")->getStringValue();
+    mqtt_password = registry.getParameterById("MQTT_PASSWORD")->getStringValue();
+    mqtt_topic_prefix = registry.getParameterById("MQTT_TOPIC")->getStringValue();
+    mqtt_hassio_enabled = registry.getParameterById("MQTT_HASSIO_ENABLED")->getBoolValue();
+    mqtt_hassio_discovery_prefix = registry.getParameterById("MQTT_HASSIO_PREFIX")->getStringValue();
+}
 
 /**
  * @brief Check if MQTT is connected, if not reconnect. Abort function if offline or brew is running
@@ -48,13 +69,13 @@ inline void checkMQTT() {
         return;
     }
 
-    if ((millis() - lastMQTTConnectionAttempt >= wifiConnectionDelay) && (MQTTReCnctCount <= maxWifiReconnects)) {
+    if (millis() - lastMQTTConnectionAttempt >= wifiConnectionDelay && MQTTReCnctCount <= maxWifiReconnects) {
         if (!mqtt.connected()) {
             lastMQTTConnectionAttempt = millis(); // Reconnection Timer Function
             MQTTReCnctCount++;                    // Increment reconnection Counter
             LOGF(DEBUG, "Attempting MQTT reconnection: %i", MQTTReCnctCount);
 
-            if (mqtt.connect(hostname, mqtt_username, mqtt_password, topic_will, 0, true, "offline")) {
+            if (mqtt.connect(hostname, mqtt_username.c_str(), mqtt_password.c_str(), topic_will, 0, true, "offline")) {
                 mqtt.subscribe(topic_set);
                 LOGF(DEBUG, "Subscribed to MQTT Topic: %s", topic_set);
             } // Try to reconnect to the server; connect() is a blocking
@@ -69,9 +90,9 @@ inline void checkMQTT() {
 /**
  * @brief Publish Data to MQTT
  */
-bool mqtt_publish(const char* reading, char* payload, boolean retain = false) {
+inline bool mqtt_publish(const char* reading, const char* payload, const boolean retain = false) {
     char topic[120];
-    snprintf(topic, 120, "%s%s/%s", mqtt_topic_prefix, hostname, reading);
+    snprintf(topic, 120, "%s%s/%s", mqtt_topic_prefix.c_str(), hostname, reading);
     return mqtt.publish(topic, payload, retain);
 }
 
@@ -82,24 +103,22 @@ bool mqtt_publish(const char* reading, char* payload, boolean retain = false) {
  * @param largeMessage The large message to be published.
  * @return 0 if the message was successfully published, otherwise an MQTT error code.
  */
-int PublishLargeMessage(const String& topic, const String& largeMessage) {
-    const size_t splitSize = 128; // Maximum Message Size
-    const size_t messageLength = largeMessage.length();
+inline int PublishLargeMessage(const String& topic, const String& largeMessage) {
+    constexpr size_t splitSize = 128; // Maximum Message Size
 
-    if (messageLength > splitSize) {
-        size_t count = messageLength / splitSize;
+    if (const size_t messageLength = largeMessage.length(); messageLength > splitSize) {
+        const size_t count = messageLength / splitSize;
         mqtt.beginPublish(topic.c_str(), messageLength, true);
 
         for (size_t i = 0; i < count; i++) {
-            size_t startIndex = i * splitSize;
-            size_t endIndex = startIndex + splitSize;
+            const size_t startIndex = i * splitSize;
+            const size_t endIndex = startIndex + splitSize;
             mqtt.print(largeMessage.substring(startIndex, endIndex));
         }
 
         mqtt.print(largeMessage.substring(count * splitSize));
-        int publishResult = mqtt.endPublish();
 
-        if (publishResult == 0) {
+        if (const int publishResult = mqtt.endPublish(); publishResult == 0) {
             LOG(WARNING, "[MQTT] PublishLargeMessage sent failed");
             return 1;
         }
@@ -109,6 +128,7 @@ int PublishLargeMessage(const String& topic, const String& largeMessage) {
     }
     else {
         boolean publishResult = mqtt.publish(topic.c_str(), largeMessage.c_str());
+
         return publishResult ? 0 : -1; // Return 0 for success, -1 for failure
     }
 }
@@ -119,9 +139,9 @@ int PublishLargeMessage(const String& topic, const String& largeMessage) {
  * @param param MQTT parameter name
  * @param value MQTT value
  */
-void assignMQTTParam(char* param, double value) {
+inline void assignMQTTParam(char* param, double value) {
     try {
-        auto it = mqttVars.find(param);
+        const auto it = mqttVars.find(param);
 
         if (it == mqttVars.end()) {
             LOGF(WARNING, "MQTT topic %s not found in mapping", param);
@@ -131,7 +151,7 @@ void assignMQTTParam(char* param, double value) {
         const char* parameterId = it->second;
 
         auto& registry = ParameterRegistry::getInstance();
-        std::shared_ptr<Parameter> var = registry.getParameterById(parameterId);
+        const std::shared_ptr<Parameter> var = registry.getParameterById(parameterId);
 
         if (!var) {
             LOGF(WARNING, "Parameter %s not found in ParameterRegistry", parameterId);
@@ -181,7 +201,7 @@ void assignMQTTParam(char* param, double value) {
 /**
  * @brief MQTT Callback Function: set Parameters through MQTT
  */
-void mqtt_callback(char* topic, byte* data, unsigned int length) {
+inline void mqtt_callback(const char* topic, const byte* data, const unsigned int length) {
     char topic_str[256];
     os_memcpy(topic_str, topic, sizeof(topic_str));
     topic_str[255] = '\0';
@@ -193,9 +213,9 @@ void mqtt_callback(char* topic, byte* data, unsigned int length) {
     char cmd[64];
     double data_double;
 
-    snprintf(topic_pattern, sizeof(topic_pattern), "%s%s/%%[^\\/]/%%[^\\/]", mqtt_topic_prefix, hostname);
+    snprintf(topic_pattern, sizeof(topic_pattern), "%s%s/%%[^\\/]/%%[^\\/]", mqtt_topic_prefix.c_str(), hostname);
 
-    if ((sscanf(topic_str, topic_pattern, &configVar, &cmd) != 2) || (strcmp(cmd, "set") != 0)) {
+    if (sscanf(topic_str, topic_pattern, &configVar, &cmd) != 2 || strcmp(cmd, "set") != 0) {
         LOGF(WARNING, "Invalid MQTT topic/command: %s", topic_str);
         return;
     }
@@ -214,10 +234,10 @@ void mqtt_callback(char* topic, byte* data, unsigned int length) {
  * @return 0 = success, MQTT error code = failure
  */
 
-int writeSysParamsToMQTT(bool continueOnError = true) {
+inline int writeSysParamsToMQTT(const bool continueOnError = true) {
     unsigned long currentMillisMQTT = millis();
 
-    if ((currentMillisMQTT - previousMillisMQTT >= intervalMQTT) && FEATURE_MQTT == 1) {
+    if (currentMillisMQTT - previousMillisMQTT >= intervalMQTT && mqtt_enabled) {
         previousMillisMQTT = currentMillisMQTT;
 
         if (mqtt.connected()) {
@@ -228,9 +248,9 @@ int writeSysParamsToMQTT(bool continueOnError = true) {
             auto& registry = ParameterRegistry::getInstance();
 
             // Iterate through the mqttVars mapping to publish parameters
-            for (const auto& mapping : mqttVars) {
-                const char* mqttTopic = mapping.first;    // MQTT topic name
-                const char* parameterId = mapping.second; // Parameter ID
+            for (const auto& [fst, snd] : mqttVars) {
+                const char* mqttTopic = fst;   // MQTT topic name
+                const char* parameterId = snd; // Parameter ID
 
                 std::shared_ptr<Parameter> param = registry.getParameterById(parameterId);
 
@@ -287,8 +307,8 @@ int writeSysParamsToMQTT(bool continueOnError = true) {
                 }
             }
 
-            for (const auto& pair : mqttSensors) {
-                if (!mqtt_publish(pair.first, number2string(pair.second()))) {
+            for (const auto& [fst, snd] : mqttSensors) {
+                if (!mqtt_publish(fst, number2string(snd()))) {
                     errorState = mqtt.state();
 
                     if (!continueOnError) {
@@ -313,11 +333,11 @@ int writeSysParamsToMQTT(bool continueOnError = true) {
  * @param payload_off The payload value to turn the switch off (default: "0")
  * @return A `DiscoveryObject` containing the switch device configuration
  */
-DiscoveryObject GenerateSwitchDevice(String name, String displayName, String payload_on = "1", String payload_off = "0") {
+inline DiscoveryObject GenerateSwitchDevice(const String& name, const String& displayName, const String& payload_on = "1", const String& payload_off = "0") {
     String mqtt_topic = String(mqtt_topic_prefix) + String(hostname);
     DiscoveryObject switch_device;
     String unique_id = "clevercoffee-" + String(hostname);
-    String SwitchDiscoveryTopic = String(MQTT_HASSIO_DISCOVERY_PREFIX) + "/switch/";
+    String SwitchDiscoveryTopic = mqtt_hassio_discovery_prefix + "/switch/";
 
     String switch_command_topic = mqtt_topic + "/" + name + "/set";
     String switch_state_topic = mqtt_topic + "/" + name;
@@ -364,11 +384,11 @@ DiscoveryObject GenerateSwitchDevice(String name, String displayName, String pay
  * @param payload_press The payload value to turn the button is pressed (default: "1")
  * @return A `DiscoveryObject` containing the switch device configuration
  */
-DiscoveryObject GenerateButtonDevice(String name, String displayName, String payload_press = "1") {
+inline DiscoveryObject GenerateButtonDevice(const String& name, const String& displayName, const String& payload_press = "1") {
     String mqtt_topic = String(mqtt_topic_prefix) + String(hostname);
     DiscoveryObject button_device;
     String unique_id = "clevercoffee-" + String(hostname);
-    String buttonDiscoveryTopic = String(MQTT_HASSIO_DISCOVERY_PREFIX) + "/button/";
+    String buttonDiscoveryTopic = mqtt_hassio_discovery_prefix + "/button/";
 
     String button_command_topic = mqtt_topic + "/" + name + "/set";
     String button_state_topic = mqtt_topic + "/" + name;
@@ -412,13 +432,14 @@ DiscoveryObject GenerateButtonDevice(String name, String displayName, String pay
  * @param name The name of the sensor (used in MQTT topics)
  * @param displayName The display name of the sensor (shown in Home Assistant)
  * @param unit_of_measurement The unit of measurement for the sensor data (default: "°C")
+ * @param device_class
  * @return A `DiscoveryObject` containing the sensor device configuration
  */
-DiscoveryObject GenerateSensorDevice(String name, String displayName, String unit_of_measurement, String device_class) {
+inline DiscoveryObject GenerateSensorDevice(const String& name, const String& displayName, const String& unit_of_measurement, const String& device_class) {
     String mqtt_topic = String(mqtt_topic_prefix) + String(hostname);
     DiscoveryObject sensor_device;
     String unique_id = "clevercoffee-" + String(hostname);
-    String SensorDiscoveryTopic = String(MQTT_HASSIO_DISCOVERY_PREFIX) + "/sensor/";
+    String SensorDiscoveryTopic = mqtt_hassio_discovery_prefix + "/sensor/";
 
     String sensor_state_topic = mqtt_topic + "/" + name;
     sensor_device.discovery_topic = SensorDiscoveryTopic + unique_id + "-" + name + "" + "/config";
@@ -466,12 +487,12 @@ DiscoveryObject GenerateSensorDevice(String name, String displayName, String uni
  * @param ui_mode Control how the number should be displayed in the UI
  * @return A `DiscoveryObject` containing the number device configuration
  */
-DiscoveryObject GenerateNumberDevice(String name, String displayName, int min_value, int max_value, float steps_value, String unit_of_measurement, String ui_mode = "box") {
+inline DiscoveryObject GenerateNumberDevice(const String& name, const String& displayName, int min_value, int max_value, float steps_value, const String& unit_of_measurement, const String& ui_mode = "box") {
     String mqtt_topic = String(mqtt_topic_prefix) + String(hostname);
     DiscoveryObject number_device;
     String unique_id = "clevercoffee-" + String(hostname);
 
-    String NumberDiscoveryTopic = String(MQTT_HASSIO_DISCOVERY_PREFIX) + "/number/";
+    String NumberDiscoveryTopic = String(mqtt_hassio_discovery_prefix) + "/number/";
     number_device.discovery_topic = NumberDiscoveryTopic + unique_id + "-" + name + "" + "/config";
 
     DynamicJsonDocument DeviceMapDoc(1024);
@@ -511,7 +532,7 @@ DiscoveryObject GenerateNumberDevice(String name, String displayName, int min_va
  * @brief Send MQTT Homeassistant Discovery Messages
  * @return 0 if successful, MQTT connection error code if failed to send messages
  */
-int sendHASSIODiscoveryMsg() {
+inline int sendHASSIODiscoveryMsg() {
     // Sensor, number and switch objects which will always be published
 
     DiscoveryObject machineStateDevice = GenerateSensorDevice("machineState", "Machine State", "", "enum");
@@ -532,11 +553,10 @@ int sendHASSIODiscoveryMsg() {
     DiscoveryObject usePonM = GenerateSwitchDevice("usePonM", "Use PonM");
 
     // List of all DiscoveryObjects, will be always published
-    std::vector<DiscoveryObject> discoveryObjects = {machineStateDevice, actual_temperature, heaterPower, brewSetpoint, steamSetpoint, brewTempOffset, steamKp, aggKp, aggTn, aggTv, aggIMax, pidOn, steamON, usePonM};
+    std::vector discoveryObjects = {machineStateDevice, actual_temperature, heaterPower, brewSetpoint, steamSetpoint, brewTempOffset, steamKp, aggKp, aggTn, aggTv, aggIMax, pidOn, steamON, usePonM};
 
     // Sensor, number and switch object which will be published based on feature set
 #if FEATURE_BREWSWITCH == 1
-
     DiscoveryObject currBrewTime = GenerateSensorDevice("currBrewTime", "Current Brew Time ", "s", "duration");
 
     DiscoveryObject brewPidDelay = GenerateNumberDevice("brewPidDelay", "Brew Pid Delay", BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX, 0.1, "s");
@@ -561,7 +581,6 @@ int sendHASSIODiscoveryMsg() {
 #endif
 
 #if FEATURE_SCALE == 1
-
     DiscoveryObject currReadingWeight = GenerateSensorDevice("currReadingWeight", "Weight", "g", "weight");
     DiscoveryObject currBrewWeight = GenerateSensorDevice("currBrewWeight", "current Brew Weight", "g", "weight");
 
@@ -586,11 +605,9 @@ int sendHASSIODiscoveryMsg() {
 
     // Send the Objects to Hassio
     if (mqtt.connected()) {
-        for (int i = 0; i < discoveryObjects.size(); i++) {
-            const DiscoveryObject& discoveryObj = discoveryObjects[i];
-            int publishResult = PublishLargeMessage(discoveryObj.discovery_topic.c_str(), discoveryObj.payload_json.c_str());
+        for (const auto& [discovery_topic, payload_json] : discoveryObjects) {
 
-            if (publishResult != 0) {
+            if (int publishResult = PublishLargeMessage(discovery_topic.c_str(), payload_json.c_str()); publishResult != 0) {
                 LOGF(ERROR, "[MQTT] Failed to publish discovery message. Error code: %d\n", publishResult);
                 return publishResult;
             }
@@ -598,8 +615,8 @@ int sendHASSIODiscoveryMsg() {
 
         return 0;
     }
-    else {
-        LOG(DEBUG, "[MQTT] Failed to send Hassio Discover, MQTT Client is not connected");
-        return -1;
-    }
+
+    LOG(DEBUG, "[MQTT] Failed to send Hassio Discover, MQTT Client is not connected");
+
+    return -1;
 }
