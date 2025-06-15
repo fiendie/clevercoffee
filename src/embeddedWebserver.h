@@ -66,7 +66,7 @@ inline double round2(const double value) {
 
 inline String getValue(const String& varName) {
     try {
-        const std::shared_ptr<Parameter> e = ParameterRegistry::getInstance().getParameterById(varName.c_str());
+        const auto e = ParameterRegistry::getInstance().getParameterById(varName.c_str());
 
         if (e == nullptr) {
             return "(unknown variable " + varName + ")";

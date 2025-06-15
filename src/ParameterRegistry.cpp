@@ -1,7 +1,6 @@
 
 #include "ParameterRegistry.h"
 #include "Logger.h"
-#include "userConfig.h"
 #include <algorithm>
 
 ParameterRegistry ParameterRegistry::_singleton;

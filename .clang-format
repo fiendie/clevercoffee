@@ -23,6 +23,7 @@ BreakConstructorInitializers: AfterColon
 ColumnLimit:     225
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: true
+NamespaceIndentation: All
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4

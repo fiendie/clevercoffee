@@ -203,7 +203,7 @@ inline void checkbrewswitch() {
  * @return true if brew is running, false otherwise
  */
 inline bool brew() {
-    if (!config.getBrewSwitchEnabled()) {
+    if (!config.getBrewSwitchEnabled() || brewSwitch == nullptr) {
         return false; // brew switch is not enabled, so no brew process running
     }
 
@@ -359,8 +359,7 @@ inline bool brew() {
  * @return true if manual flush is running, false otherwise
  */
 inline bool manualFlush() {
-
-    if (!config.getBrewSwitchEnabled()) {
+    if (!config.getBrewSwitchEnabled() || brewSwitch == nullptr) {
         return false; // brew switch is not enabled, so no brew process running
     }
 

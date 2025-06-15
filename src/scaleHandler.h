@@ -9,11 +9,11 @@
 inline void scaleCalibrate(HX711_ADC loadCell, int pin, bool isSecondCell, float* calibration) {
     loadCell.setCalFactor(1.0);
 
-    u8g2.clearBuffer();
-    u8g2.drawStr(0, 22, "Calibration coming up");
-    u8g2.drawStr(0, 32, "Empty scale ");
-    u8g2.print(pin, 0);
-    u8g2.sendBuffer();
+    u8g2->clearBuffer();
+    u8g2->drawStr(0, 22, "Calibration coming up");
+    u8g2->drawStr(0, 32, "Empty scale ");
+    u8g2->print(pin, 0);
+    u8g2->sendBuffer();
 
     LOGF(INFO, "Taking scale %d to zero point", pin);
 
@@ -24,13 +24,13 @@ inline void scaleCalibrate(HX711_ADC loadCell, int pin, bool isSecondCell, float
 
     float scaleKnownWeight = ParameterRegistry::getInstance().getParameterById("SCALE_KNOWN_WEIGHT")->getFloatValue();
 
-    u8g2.clearBuffer();
-    u8g2.drawStr(2, 2, "Calibration in progress.");
-    u8g2.drawStr(2, 12, "Place known weight");
-    u8g2.drawStr(2, 22, "on scale in next");
-    u8g2.drawStr(2, 32, "10 seconds");
-    u8g2.drawStr(2, 42, number2string(scaleKnownWeight));
-    u8g2.sendBuffer();
+    u8g2->clearBuffer();
+    u8g2->drawStr(2, 2, "Calibration in progress.");
+    u8g2->drawStr(2, 12, "Place known weight");
+    u8g2->drawStr(2, 22, "on scale in next");
+    u8g2->drawStr(2, 32, "10 seconds");
+    u8g2->drawStr(2, 42, number2string(scaleKnownWeight));
+    u8g2->sendBuffer();
     delay(10000);
 
     LOG(INFO, "Taking scale load point");
@@ -43,7 +43,7 @@ inline void scaleCalibrate(HX711_ADC loadCell, int pin, bool isSecondCell, float
 
     LOGF(INFO, "New calibration: %f", *calibration);
 
-    u8g2.sendBuffer();
+    u8g2->sendBuffer();
 
     if (isSecondCell) {
         ParameterRegistry::getInstance().setParameterValue("SCALE2_CALIBRATION", *calibration);
@@ -52,11 +52,11 @@ inline void scaleCalibrate(HX711_ADC loadCell, int pin, bool isSecondCell, float
         ParameterRegistry::getInstance().setParameterValue("SCALE_CALIBRATION", *calibration);
     }
 
-    u8g2.clearBuffer();
-    u8g2.drawStr(2, 2, "Calibration done!");
-    u8g2.drawStr(2, 12, "New calibration:");
-    u8g2.drawStr(2, 22, number2string(*calibration));
-    u8g2.sendBuffer();
+    u8g2->clearBuffer();
+    u8g2->drawStr(2, 2, "Calibration done!");
+    u8g2->drawStr(2, 12, "New calibration:");
+    u8g2->drawStr(2, 22, number2string(*calibration));
+    u8g2->sendBuffer();
 
     delay(2000);
 }
@@ -115,12 +115,12 @@ inline void checkWeight() {
 
     if (scaleTareOn) {
         scaleTareOn = 0;
-        u8g2.clearBuffer();
-        u8g2.drawStr(0, 2, "Taring scale,");
-        u8g2.drawStr(0, 12, "remove any load!");
-        u8g2.drawStr(0, 22, "....");
+        u8g2->clearBuffer();
+        u8g2->drawStr(0, 2, "Taring scale,");
+        u8g2->drawStr(0, 12, "remove any load!");
+        u8g2->drawStr(0, 22, "....");
         delay(2000);
-        u8g2.sendBuffer();
+        u8g2->sendBuffer();
         LoadCell.tare();
         LoadCell.setCalFactor(scaleCalibration);
 
@@ -129,8 +129,8 @@ inline void checkWeight() {
             LoadCell2.tare();
         }
 
-        u8g2.drawStr(0, 32, "done");
-        u8g2.sendBuffer();
+        u8g2->drawStr(0, 32, "done");
+        u8g2->sendBuffer();
         delay(2000);
     }
 }
@@ -170,10 +170,10 @@ void initScale() {
 
     if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag()) {
         LOG(ERROR, "Timeout, check MCU>HX711 wiring for scale");
-        u8g2.clearBuffer();
-        u8g2.drawStr(0, 32, "failed!");
-        u8g2.drawStr(0, 42, "Scale not working..."); // scale timeout will most likely trigger after OTA update, but will still work after boot
-        u8g2.sendBuffer();
+        u8g2->clearBuffer();
+        u8g2->drawStr(0, 32, "failed!");
+        u8g2->drawStr(0, 42, "Scale not working..."); // scale timeout will most likely trigger after OTA update, but will still work after boot
+        u8g2->sendBuffer();
         delay(5000);
         scaleFailure = true;
         return;
@@ -182,10 +182,10 @@ void initScale() {
     if (config.getScaleType() == 0) {
         if (LoadCell2.getTareTimeoutFlag() || LoadCell2.getSignalTimeoutFlag()) {
             LOG(ERROR, "Timeout, check MCU>HX711 wiring for scale 2");
-            u8g2.clearBuffer();
-            u8g2.drawStr(0, 32, "failed!");
-            u8g2.drawStr(0, 42, "Scale not working..."); // scale timeout will most likely trigger after OTA update, but will still work after boot
-            u8g2.sendBuffer();
+            u8g2->clearBuffer();
+            u8g2->drawStr(0, 32, "failed!");
+            u8g2->drawStr(0, 42, "Scale not working..."); // scale timeout will most likely trigger after OTA update, but will still work after boot
+            u8g2->sendBuffer();
             delay(5000);
             scaleFailure = true;
             return;

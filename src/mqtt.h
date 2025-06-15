@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Parameter.h"
-#include "userConfig.h"
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <os.h>

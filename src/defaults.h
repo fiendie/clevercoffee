@@ -14,6 +14,7 @@
 // default parameters
 #define HOSTNAME                  "silvia"          // default hostname
 #define OTAPASS                   "otapass"         // default password for over-the-air updates
+#define WM_PASS                   "CleverCoffee"    // default password for WiFiManager
 #define SETPOINT                  95.0              // brew temperature setpoint
 #define TEMPOFFSET                0.0               // brew temperature setpoint
 #define STEAMSETPOINT             120.0             // steam temperature setpoint
@@ -94,9 +95,9 @@
 #define POST_BREW_TIMER_DURATION_MIN  0.0
 #define POST_BREW_TIMER_DURATION_MAX  60.0
 #define SCALE_CALIBRATION_MIN         0.01
-#define SCALE_CALIBRATION_MAX         100.0
+#define SCALE_CALIBRATION_MAX         1000.0
 #define SCALE2_CALIBRATION_MIN        0.01
-#define SCALE2_CALIBRATION_MAX        100.0
+#define SCALE2_CALIBRATION_MAX        1000.0
 #define SCALE_KNOWN_WEIGHT_MIN        0.0
 #define SCALE_KNOWN_WEIGHT_MAX        2000.0
 #define MQTT_BROKER_MAX_LENGTH        64

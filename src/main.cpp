@@ -27,10 +27,8 @@
 // Includes
 #include "Config.h"
 #include "ParameterRegistry.h"
-#include "display/bitmaps.h" // user icons for display
-#include "languages.h"       // for language translation
 
-// Utilities:
+// Utilities
 #include "utils/Timer.h"
 
 // Hardware classes
@@ -46,7 +44,6 @@
 
 // User configuration & defaults
 #include "defaults.h"
-#include "userConfig.h" // needs to be configured by the user
 
 hw_timer_t* timer = nullptr;
 
@@ -84,12 +81,11 @@ MachineState machineState = kInit;
 MachineState lastmachinestate = kInit;
 int lastmachinestatepid = -1;
 
-// Definitions below must be changed in the userConfig.h file
-int connectmode = CONNECTMODE;
-
 int offlineMode = 0;
+
 // Display
-uint8_t oled_i2c = OLED_I2C;
+U8G2* u8g2 = nullptr;
+
 uint8_t featureFullscreenBrewTimer = 0;
 uint8_t featureFullscreenManualFlushTimer = 0;
 double postBrewTimerDuration = POST_BREW_TIMER_DURATION;
@@ -102,7 +98,7 @@ WiFiManager wm;
 constexpr unsigned long wifiConnectionDelay = WIFICONNECTIONDELAY;
 constexpr unsigned int maxWifiReconnects = MAXWIFIRECONNECTS;
 String hostname;
-auto pass = PASS;
+auto pass = WM_PASS;
 unsigned long lastWifiConnectionAttempt = millis();
 unsigned int wifiReconnects = 0; // actual number of reconnects
 
@@ -115,30 +111,30 @@ float inputPressureFilter = 0;
 const unsigned long intervalPressure = 100;
 unsigned long previousMillisPressure; // initialisation at the end of init()
 
-Switch* waterTankSensor;
+Switch* waterTankSensor = nullptr;
 
-GPIOPin* statusLedPin;
-GPIOPin* brewLedPin;
-GPIOPin* steamLedPin;
+GPIOPin* statusLedPin = nullptr;
+GPIOPin* brewLedPin = nullptr;
+GPIOPin* steamLedPin = nullptr;
 
-LED* statusLed;
-LED* brewLed;
-LED* steamLed;
+LED* statusLed = nullptr;
+LED* brewLed = nullptr;
+LED* steamLed = nullptr;
 
 GPIOPin heaterRelayPin(PIN_HEATER, GPIOPin::OUT);
-Relay* heaterRelay;
+Relay* heaterRelay = nullptr;
 
 GPIOPin pumpRelayPin(PIN_PUMP, GPIOPin::OUT);
-Relay* pumpRelay;
+Relay* pumpRelay = nullptr;
 
 GPIOPin valveRelayPin(PIN_VALVE, GPIOPin::OUT);
-Relay* valveRelay;
+Relay* valveRelay = nullptr;
 
-Switch* powerSwitch;
-Switch* brewSwitch;
-Switch* steamSwitch;
+Switch* powerSwitch = nullptr;
+Switch* brewSwitch = nullptr;
+Switch* steamSwitch = nullptr;
 
-TempSensor* tempSensor;
+TempSensor* tempSensor = nullptr;
 
 #include "isr.h"
 
@@ -146,7 +142,7 @@ TempSensor* tempSensor;
 void setSteamMode(int steamMode);
 void setBackflush(int backflush);
 void setScaleTare(int tare);
-void setScaleCalibration(int tare);
+void setScaleCalibration(int calibration);
 void setPIDTunings(bool usePonM);
 void setBDPIDTunings();
 void setRuntimePidState(bool enabled);
@@ -191,14 +187,11 @@ uint8_t useBDPID = 0;
 double aggbKp = AGGBKP;
 double aggbTn = AGGBTN;
 double aggbTv = AGGBTV;
-
-#if aggbTn == 0
-double aggbKi = 0;
-#else
-double aggbKi = aggbKp / aggbTn;
-#endif
-
+double aggbKi = (aggbTn == 0) ? 0 : aggbKp / aggbTn;
 double aggbKd = aggbTv * aggbKp;
+double aggKi = (aggTn == 0) ? 0 : aggKp / aggTn;
+double aggKd = aggTv * aggKp;
+
 double brewPIDDelay = BREW_PID_DELAY; // Time PID will be disabled after brew started
 
 uint8_t standbyModeOn = 0;
@@ -210,20 +203,6 @@ double standbyModeTime = STANDBY_MODE_TIME;
 double temperature, pidOutput;
 int steamON = 0;
 int steamFirstON = 0;
-
-#if startTn == 0
-double startKi = 0;
-#else
-double startKi = startKp / startTn;
-#endif
-
-#if aggTn == 0
-double aggKi = 0;
-#else
-double aggKi = aggKp / aggTn;
-#endif
-
-double aggKd = aggTv * aggKp;
 
 PID bPID(&temperature, &pidOutput, &setpoint, aggKp, aggKi, aggKd, 1, DIRECT);
 
@@ -300,21 +279,10 @@ int getSignalStrength() {
     return 0;
 }
 
-// Forward declarations for display methods
-#if OLED_DISPLAY != 0
 void displayMessage(String text1, String text2, String text3, String text4, String text5, String text6);
 void displayLogo(String displaymessagetext, String displaymessagetext2);
 bool shouldDisplayBrewTimer();
 void u8g2_prepare();
-#endif
-
-// Display define & template
-#if OLED_DISPLAY == 1
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_I2CSCL, PIN_I2CSDA);  // e.g. 1.3"
-#endif
-#if OLED_DISPLAY == 2
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_I2CSCL, PIN_I2CSDA); // e.g. 0.96"
-#endif
 
 #include "display/displayTemplateManager.h"
 
@@ -338,9 +306,9 @@ void testEmergencyStop() {
  * @brief Switch to offline mode if maxWifiReconnects were exceeded during boot
  */
 void initOfflineMode() {
-#if OLED_DISPLAY != 0
-    displayMessage("", "", "", "", "Begin Fallback,", "No Wifi");
-#endif
+    if (config.getOledEnabled()) {
+        displayMessage("", "", "", "", "Begin Fallback,", "No Wifi");
+    }
 
     LOG(INFO, "Start offline mode with eeprom values, no wifi :(");
     offlineMode = 1;
@@ -363,9 +331,9 @@ void checkWifi() {
                 LOGF(INFO, "Attempting WIFI (re-)connection: %i", wifiReconnects);
 
                 if (!setupDone) {
-#if OLED_DISPLAY != 0
-                    displayMessage("", "", "", "", langstring_wifirecon, String(wifiReconnects));
-#endif
+                    if (config.getOledEnabled()) {
+                        displayMessage("", "", "", "", langstring_wifirecon, String(wifiReconnects));
+                    }
                 }
 
                 wm.disconnect();
@@ -647,58 +615,62 @@ void handleMachineState() {
             break;
 
         case kStandby:
-            if (standbyModeRemainingTimeDisplayOffMillis == 0) {
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(1);
-#endif
+            if (standbyModeRemainingTimeDisplayOffMillis == 0 && config.getOledEnabled()) {
+                u8g2->setPowerSave(1);
             }
 
             if (pidON) {
                 machineState = kPidNormal;
                 resetStandbyTimer(machineState);
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
             }
             if (steamON) {
                 setRuntimePidState(true);
                 machineState = kSteam;
                 resetStandbyTimer(machineState);
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
             }
 
             if (brew()) {
                 setRuntimePidState(true);
                 machineState = kBrew;
                 resetStandbyTimer(machineState);
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
             }
 
             if (manualFlush()) {
                 setRuntimePidState(true);
                 machineState = kManualFlush;
                 resetStandbyTimer(machineState);
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
             }
 
             if (backflushOn) {
                 machineState = kBackflush;
                 resetStandbyTimer(machineState);
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
             }
 
             if (tempSensor->hasError()) {
-#if OLED_DISPLAY != 0
-                u8g2.setPowerSave(0);
-#endif
+                if (config.getOledEnabled()) {
+                    u8g2->setPowerSave(0);
+                }
+
                 machineState = kSensorError;
             }
 
@@ -758,28 +730,23 @@ char const* machinestateEnumToString(const MachineState machineState) {
  * @brief Set up internal WiFi hardware
  */
 void wiFiSetup() {
-    // Read WiFi credentials saved flag from config
-    wifiCredentialsSaved = config.getWifiCredentialsSaved();
-
     wm.setCleanConnect(true);
     wm.setConfigPortalTimeout(60); // sec timeout for captive portal
     wm.setConnectTimeout(10);      // using 10s to connect to WLAN, 5s is sometimes too short!
     wm.setBreakAfterConfig(true);
     wm.setConnectRetries(3);
 
-    if (wifiCredentialsSaved == 0) {
+    if (wm.getWiFiIsSaved()) {
         LOGF(INFO, "Connecting to WiFi: %s", hostname.c_str());
 
-#if OLED_DISPLAY != 0
-        displayLogo("Connecting to: ", hostname.c_str());
-#endif
+        if (config.getOledEnabled()) {
+            displayLogo("Connecting to: ", hostname.c_str());
+        }
     }
 
     wm.setHostname(hostname.c_str());
 
     if (wm.autoConnect(hostname.c_str(), pass)) {
-        wifiCredentialsSaved = 1;
-        config.setWifiCredentialsSaved(true);
 
         if (!config.save()) {
             LOG(ERROR, "Failed to save config to filesystem!");
@@ -802,9 +769,9 @@ void wiFiSetup() {
     else {
         LOG(INFO, "WiFi connection timed out...");
 
-#if OLED_DISPLAY != 0
-        displayLogo(langstring_nowifi[0], langstring_nowifi[1]);
-#endif
+        if (config.getOledEnabled()) {
+            displayLogo(langstring_nowifi[0], langstring_nowifi[1]);
+        }
 
         wm.disconnect();
         delay(1000);
@@ -812,22 +779,19 @@ void wiFiSetup() {
         offlineMode = 1;
     }
 
-#if OLED_DISPLAY != 0
-    displayLogo(langstring_connectwifi1, wm.getWiFiSSID(true));
-#endif
+    if (config.getOledEnabled()) {
+        displayLogo(langstring_connectwifi1, wm.getWiFiSSID(true));
+    }
 }
 
 void wiFiReset() {
     wm.resetSettings();
 
-    // Update the config
-    wifiCredentialsSaved = 0;
-    config.setWifiCredentialsSaved(false);
-
     if (!config.save()) {
         LOG(ERROR, "Failed to save config to filesystem!");
     }
 
+    delay(500);
     ESP.restart();
 }
 
@@ -855,9 +819,39 @@ void setup() {
         hostname = config.getHostname();
     }
 
-    if (OLED_DISPLAY > 0) {
-        int templateId = config.getDisplayTemplate();
-        DisplayTemplateManager::initializeDisplay(templateId);
+    Wire.begin();
+
+    if (config.getOledEnabled()) {
+        switch (config.getOledType()) {
+            case 0:
+                u8g2 = new U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE, PIN_I2CSCL, PIN_I2CSDA);  // e.g. 1.3"
+                break;
+            case 1:
+                u8g2 = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE, PIN_I2CSCL, PIN_I2CSDA); // e.g. 0.96"
+                break;
+            default:
+                break;
+        }
+
+        if (u8g2 != nullptr) {
+            // TODO This line doesn't work for some reason
+            // u8g2->setI2CAddress(0x3C);
+            u8g2->begin();
+            u8g2->clearBuffer();
+
+            u8g2_prepare();
+
+            initLangStrings(config);
+
+            const int templateId = config.getDisplayTemplate();
+            DisplayTemplateManager::initializeDisplay(templateId);
+
+            displayLogo(String("Version "), String(sysVersion));
+        }
+        else {
+            LOG(ERROR, "Error initializing the display!");
+            config.setOledEnabled(false);
+        }
     }
 
     // Calculate derived values
@@ -865,10 +859,6 @@ void setup() {
     aggKd = aggTv * aggKp;
     aggbKi = aggbTn > 0 ? aggbKp / aggbTn : 0;
     aggbKd = aggbTv * aggbKp;
-
-    if (config.getPressureSensorEnabled()) {
-        Wire.begin();
-    }
 
     setupMqtt();
 
@@ -988,16 +978,8 @@ void setup() {
         waterTankSensor = new IOSwitch(PIN_WATERTANKSENSOR, (mode == Switch::NORMALLY_OPEN ? GPIOPin::IN_PULLDOWN : GPIOPin::IN_PULLUP), Switch::TOGGLE, mode);
     }
 
-#if OLED_DISPLAY != 0
-    u8g2.setI2CAddress(oled_i2c * 2);
-    u8g2.begin();
-    u8g2_prepare();
-    displayLogo(String("Version "), String(sysVersion));
-    delay(2000); // caused crash with wifi manager on esp8266, should be ok on esp32
-#endif
-
     // Fallback offline
-    if (connectmode == 1) { // WiFi Mode
+    if (!config.getOfflineModeEnabled()) { // WiFi Mode
         wiFiSetup();
         serverSetup();
 
@@ -1022,9 +1004,9 @@ void setup() {
             }
         }
     }
-    else if (connectmode == 0) {
-        wm.disconnect(); // no wm
-        offlineMode = 1; // offline mode
+    else {
+        wm.disconnect();
+        offlineMode = 1;
         setRuntimePidState(true);
     }
 
@@ -1040,12 +1022,11 @@ void setup() {
     bPID.SetSmoothingFactor(emaFactor);
     bPID.SetMode(AUTOMATIC);
 
-    if constexpr (TEMP_SENSOR == 1) {
-        tempSensor = new TempSensorDallas(PIN_TEMPSENSOR);
-    }
-
-    if constexpr (TEMP_SENSOR == 2) {
+    if (config.getTempSensorType() == 0) {
         tempSensor = new TempSensorTSIC(PIN_TEMPSENSOR);
+    }
+    else if (config.getTempSensorType() == 1) {
+        tempSensor = new TempSensorDallas(PIN_TEMPSENSOR);
     }
 
     temperature = tempSensor->getCurrentTemperature();
@@ -1175,25 +1156,23 @@ void looppid() {
         }
     }
 
-#if FEATURE_SCALE == 1
-    checkWeight();    // Check Weight Scale in the loop
-    shottimerscale(); // Calculation of weight of shot while brew is running
-#endif
+    if (config.getScaleEnabled()) {
+        checkWeight();    // Check Weight Scale in the loop
+        shottimerscale(); // Calculation of weight of shot while brew is running
+    }
 
-#if (FEATURE_BREWSWITCH == 1)
     brew();
     manualFlush();
-#endif
 
-#if (FEATURE_PRESSURESENSOR == 1)
-    unsigned long currentMillisPressure = millis();
+    if (config.getPressureSensorEnabled()) {
+        unsigned long currentMillisPressure = millis();
 
-    if (currentMillisPressure - previousMillisPressure >= intervalPressure) {
-        previousMillisPressure = currentMillisPressure;
-        inputPressure = measurePressure();
-        inputPressureFilter = filterPressureValue(inputPressure);
+        if (currentMillisPressure - previousMillisPressure >= intervalPressure) {
+            previousMillisPressure = currentMillisPressure;
+            inputPressure = measurePressure();
+            inputPressureFilter = filterPressureValue(inputPressure);
+        }
     }
-#endif
 
     checkSteamSwitch();
     checkPowerSwitch();
@@ -1209,15 +1188,14 @@ void looppid() {
     updateStandbyTimer();
     handleMachineState();
 
-    // Check if brew timer should be shown
-#if (FEATURE_BREWSWITCH == 1)
-    shouldDisplayBrewTimer();
-#endif
+    if (config.getBrewSwitchEnabled()) {
+        shouldDisplayBrewTimer();
+    }
 
     // Check if PID should run or not. If not, set to manual and force output to zero
-#if OLED_DISPLAY != 0
-    printDisplayTimer();
-#endif
+    if (config.getOledEnabled()) {
+        printDisplayTimer();
+    }
 
     if (machineState == kPidDisabled || machineState == kWaterTankEmpty || machineState == kSensorError || machineState == kEmergencyStop || machineState == kEepromError || machineState == kStandby ||
         machineState == kBackflush || brewPIDDisabled) {

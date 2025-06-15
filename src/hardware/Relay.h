@@ -30,7 +30,7 @@ class Relay {
          * @param gpioInstance GPIO pin this relay is connected to
          * @param trigger Trigger type this relay requires
          */
-        Relay(GPIOPin& gpioInstance, TriggerType trigger = HIGH_TRIGGER);
+        explicit Relay(GPIOPin& gpioInstance, TriggerType trigger = HIGH_TRIGGER);
 
         /**
          * @brief Switch relay on
@@ -46,7 +46,7 @@ class Relay {
          * @brief Get the GPIO pin this relay is connected to
          * @return GPIO pin of the relay
          */
-        GPIOPin& getGPIOInstance() const;
+        [[nodiscard]] GPIOPin& getGPIOInstance() const;
 
     private:
         GPIOPin& gpio;

@@ -3,21 +3,21 @@
 #include "displayCommon.h"
 
 namespace Templates {
-namespace Standard {
+    namespace Standard {
 #include "displayTemplateStandard.h"
-}
+    }
 
-namespace Minimal {
+    namespace Minimal {
 #include "displayTemplateMinimal.h"
-}
+    }
 
-namespace TempOnly {
+    namespace TempOnly {
 #include "displayTemplateTempOnly.h"
-}
+    }
 
-namespace Scale {
+    namespace Scale {
 #include "displayTemplateScale.h"
-}
+    }
 } // namespace Templates
 
 class DisplayTemplateManager {

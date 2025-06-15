@@ -7,8 +7,6 @@
 #pragma once
 
 #include "Logger.h"
-#include "userConfig.h"
-#include <Arduino.h>
 #include <Wire.h>
 
 #define ABP2_READ_DELAY_MS (10)
@@ -29,7 +27,7 @@ double ABP2_pmax = 10.0;                  // maximum value of pressure range [ba
 double ABP2_pmin = 0.0;                   // minimum value of pressure range [bar, psi, kPa, etc.]
 double ABP2_percentage = 0.0;             // holds percentage of full scale data
 
-float measurePressure() {
+inline float measurePressure() {
     Wire.beginTransmission(ABP2_id);
     int stat = Wire.write(ABP2_cmd, 3); // write command to the sensor
     stat |= Wire.endTransmission();
@@ -38,8 +36,8 @@ float measurePressure() {
     // read back Sensor data 7 bytes
     Wire.requestFrom(ABP2_id, (uint8_t)7);
 
-    for (int i = 0; i < 7; i++) {
-        ABP2_data[i] = Wire.read();
+    for (unsigned char& i : ABP2_data) {
+        i = Wire.read();
     }
 
     // calculate digital pressure counts

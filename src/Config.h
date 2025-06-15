@@ -47,120 +47,6 @@ class Config {
         }
 
         /**
-         * @brief Create a new configuration with default values
-         */
-        void createDefaults() {
-            // Clear the document
-            _doc.clear();
-
-            // PID general
-            _doc["pid"]["enabled"] = false;
-            _doc["pid"]["use_ponm"] = false;
-            _doc["pid"]["ema_factor"] = EMA_FACTOR;
-
-            // PID regular
-            _doc["pid"]["regular"]["kp"] = AGGKP;
-            _doc["pid"]["regular"]["tn"] = AGGTN;
-            _doc["pid"]["regular"]["tv"] = AGGTV;
-            _doc["pid"]["regular"]["i_max"] = AGGIMAX;
-
-            // PID brew detection
-            _doc["pid"]["bd"]["enabled"] = false;
-            _doc["pid"]["bd"]["kp"] = AGGBKP;
-            _doc["pid"]["bd"]["tn"] = AGGBTN;
-            _doc["pid"]["bd"]["tv"] = AGGBTV;
-
-            // PID steam
-            _doc["pid"]["steam"]["kp"] = STEAMKP;
-
-            // Brew settings
-            _doc["brew"]["setpoint"] = SETPOINT;
-            _doc["brew"]["temp_offset"] = TEMPOFFSET;
-            _doc["brew"]["pid_delay"] = BREW_PID_DELAY;
-            _doc["brew"]["target_time"] = TARGET_BREW_TIME;
-            _doc["brew"]["target_weight"] = TARGET_BREW_WEIGHT;
-
-            // Pre-infusion
-            _doc["brew"]["pre_infusion"]["time"] = PRE_INFUSION_TIME;
-            _doc["brew"]["pre_infusion"]["pause"] = PRE_INFUSION_PAUSE_TIME;
-
-            // Steam
-            _doc["steam"]["setpoint"] = STEAMSETPOINT;
-
-            // Backflushing
-            _doc["backflush"]["cycles"] = BACKFLUSH_CYCLES;
-            _doc["backflush"]["fill_time"] = BACKFLUSH_FILL_TIME;
-            _doc["backflush"]["flush_time"] = BACKFLUSH_FLUSH_TIME;
-
-            // Standby
-            _doc["standby"]["enabled"] = false;
-            _doc["standby"]["time"] = STANDBY_MODE_TIME;
-
-            // Features
-            _doc["features"]["brew_control"] = false;
-
-            // MQTT
-            _doc["mqtt"]["enabled"] = false;
-            _doc["mqtt"]["broker"] = "";
-            _doc["mqtt"]["port"] = 1883;
-            _doc["mqtt"]["username"] = MQTT_USERNAME;
-            _doc["mqtt"]["password"] = MQTT_PASSWORD;
-            _doc["mqtt"]["topic"] = MQTT_TOPIC;
-            _doc["mqtt"]["hassio"]["enabled"] = false;
-            _doc["mqtt"]["hassio"]["prefix"] = MQTT_HASSIO_PREFIX;
-
-            // System
-            _doc["system"]["hostname"] = HOSTNAME;
-            _doc["system"]["ota_password"] = OTAPASS;
-            _doc["system"]["log_level"] = static_cast<int>(Logger::Level::INFO);
-
-            // Display
-            _doc["display"]["template"] = 0;
-            _doc["display"]["fullscreen_brew_timer"] = false;
-            _doc["display"]["fullscreen_manual_flush_timer"] = false;
-            _doc["display"]["post_brew_timer_duration"] = POST_BREW_TIMER_DURATION;
-            _doc["display"]["heating_logo"] = true;
-            _doc["display"]["pid_off_logo"] = true;
-
-            // Hardware
-            _doc["hardware"]["relays"]["heater"]["trigger_type"] = Relay::HIGH_TRIGGER;
-            _doc["hardware"]["relays"]["pump_valve"]["trigger_type"] = Relay::HIGH_TRIGGER;
-
-            _doc["hardware"]["switches"]["brew"]["enabled"] = false;
-            _doc["hardware"]["switches"]["brew"]["type"] = static_cast<int>(Switch::TOGGLE);
-            _doc["hardware"]["switches"]["brew"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
-            _doc["hardware"]["switches"]["steam"]["enabled"] = false;
-            _doc["hardware"]["switches"]["steam"]["type"] = static_cast<int>(Switch::TOGGLE);
-            _doc["hardware"]["switches"]["steam"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
-            _doc["hardware"]["switches"]["power"]["enabled"] = false;
-            _doc["hardware"]["switches"]["power"]["type"] = static_cast<int>(Switch::TOGGLE);
-            _doc["hardware"]["switches"]["power"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
-
-            _doc["hardware"]["leds"]["status"]["enabled"] = false;
-            _doc["hardware"]["leds"]["status"]["inverted"] = false;
-            _doc["hardware"]["leds"]["brew"]["enabled"] = false;
-            _doc["hardware"]["leds"]["brew"]["inverted"] = false;
-            _doc["hardware"]["leds"]["steam"]["enabled"] = false;
-            _doc["hardware"]["leds"]["steam"]["inverted"] = false;
-
-            _doc["hardware"]["sensors"]["pressure"]["enabled"] = false;
-
-            _doc["hardware"]["sensors"]["watertank"]["enabled"] = false;
-            _doc["hardware"]["sensors"]["watertank"]["mode"] = static_cast<int>(Switch::NORMALLY_CLOSED);
-
-            // Scale
-            _doc["hardware"]["sensors"]["scale"]["enabled"] = false;
-            _doc["hardware"]["sensors"]["scale"]["samples"] = SCALE_SAMPLES;
-            _doc["hardware"]["sensors"]["scale"]["type"] = 0;
-            _doc["hardware"]["sensors"]["scale"]["calibration"] = SCALE_CALIBRATION_FACTOR;
-            _doc["hardware"]["sensors"]["scale"]["calibration2"] = SCALE_CALIBRATION_FACTOR;
-            _doc["hardware"]["sensors"]["scale"]["known_weight"] = SCALE_KNOWN_WEIGHT;
-
-            // WiFi credentials flag
-            _doc["wifi"]["credentials_saved"] = false;
-        }
-
-        /**
          * @brief Load configuration from file
          *
          * @return true if successful, false otherwise
@@ -242,15 +128,6 @@ class Config {
             }
 
             return true;
-        }
-
-        // WiFi credentials flag
-        bool getWifiCredentialsSaved() {
-            return _doc["wifi"]["credentials_saved"] | false;
-        }
-
-        void setWifiCredentialsSaved(const bool value) {
-            _doc["wifi"]["credentials_saved"] = value;
         }
 
         // PID general
@@ -562,6 +439,15 @@ class Config {
             _doc["system"]["log_level"] = value;
         }
 
+        bool getOfflineModeEnabled() {
+            return _doc["system"]["offline_mode"] | false;
+        }
+
+        void setOfflineModeEnabled(const bool value) {
+            _doc["system"]["offline_mode"] = value;
+        }
+
+        // Display
         int getDisplayTemplate() {
             return _doc["display"]["template"];
         }
@@ -611,9 +497,59 @@ class Config {
             _doc["display"]["pid_off_logo"] = value;
         }
 
+        int getDisplayLanguage() {
+            return _doc["display"]["language"] | 0;
+        }
+
+        void setDisplayLanguage(const int value) {
+            _doc["display"]["language"] = constrain(value, 0, 2);
+        }
+
+        // Hardware
+        int getTempSensorType() {
+            return _doc["hardware"]["sensors"]["temperature"]["type"] | 0;
+        }
+
+        void setTempSensorType(const int value) {
+            _doc["hardware"]["sensors"]["temperature"]["type"] = constrain(value, 0, 1);
+        }
+
+        // Hardware - OLED
+        bool getOledEnabled() {
+            return _doc["hardware"]["oled"]["enabled"] | false;
+        }
+
+        void setOledEnabled(const bool value) {
+            _doc["hardware"]["oled"]["enabled"] = value;
+        }
+
+        int getOledType() {
+            return _doc["hardware"]["oled"]["type"] | 0;
+        }
+
+        void setOledType(const int value) {
+            _doc["hardware"]["oled"]["type"] = constrain(value, 0, 1);
+        }
+
+        int getOledRotation() {
+            return _doc["hardware"]["oled"]["rotation"] | 0;
+        }
+
+        void setOledRotation(const int value) {
+            _doc["hardware"]["oled"]["rotation"] = constrain(value, 0, 3);
+        }
+
+        uint8_t getOledI2cAddress() {
+            return _doc["hardware"]["oled"]["i2c_address"] | 0x3C;
+        }
+
+        void setOledI2cAddress(const uint8_t value) {
+            _doc["hardware"]["oled"]["i2c_address"] = constrain(value, 0x3C, 0x3F);
+        }
+
         // Hardware - Relays
         int getHeaterRelayTriggerType() {
-            return _doc["hardware"]["relays"]["heater"]["trigger_type"];
+            return _doc["hardware"]["relays"]["heater"]["trigger_type"] | 0;
         }
 
         void setHeaterRelayTriggerType(const int value) {
@@ -621,7 +557,7 @@ class Config {
         }
 
         int getPumpValveRelayTriggerType() {
-            return _doc["hardware"]["relays"]["pump_valve"]["trigger_type"];
+            return _doc["hardware"]["relays"]["pump_valve"]["trigger_type"] | 0;
         }
 
         void setPumpValveRelayTriggerType(const int value) {
@@ -817,7 +753,7 @@ class Config {
         }
 
         float getScale2Calibration() {
-            return _doc["hardware"]["sensors"]["scale"]["calibration2"] | static_cast<float>(SCALE_CALIBRATION_FACTOR);
+            return _doc["hardware"]["sensors"]["scale"]["calibration2"] | static_cast<float>(SCALE2_CALIBRATION_FACTOR);
         }
 
         void setScale2Calibration(const float value) {
@@ -828,6 +764,126 @@ class Config {
         inline static auto CONFIG_FILE = "/config.json";
 
         StaticJsonDocument<4096> _doc;
+
+        /**
+         * @brief Create a new configuration with default values
+         */
+        void createDefaults() {
+            // Clear the document
+            _doc.clear();
+
+            // PID general
+            _doc["pid"]["enabled"] = false;
+            _doc["pid"]["use_ponm"] = false;
+            _doc["pid"]["ema_factor"] = EMA_FACTOR;
+
+            // PID regular
+            _doc["pid"]["regular"]["kp"] = AGGKP;
+            _doc["pid"]["regular"]["tn"] = AGGTN;
+            _doc["pid"]["regular"]["tv"] = AGGTV;
+            _doc["pid"]["regular"]["i_max"] = AGGIMAX;
+
+            // PID brew detection
+            _doc["pid"]["bd"]["enabled"] = false;
+            _doc["pid"]["bd"]["kp"] = AGGBKP;
+            _doc["pid"]["bd"]["tn"] = AGGBTN;
+            _doc["pid"]["bd"]["tv"] = AGGBTV;
+
+            // PID steam
+            _doc["pid"]["steam"]["kp"] = STEAMKP;
+
+            // Brew settings
+            _doc["brew"]["setpoint"] = SETPOINT;
+            _doc["brew"]["temp_offset"] = TEMPOFFSET;
+            _doc["brew"]["pid_delay"] = BREW_PID_DELAY;
+            _doc["brew"]["target_time"] = TARGET_BREW_TIME;
+            _doc["brew"]["target_weight"] = TARGET_BREW_WEIGHT;
+
+            // Pre-infusion
+            _doc["brew"]["pre_infusion"]["time"] = PRE_INFUSION_TIME;
+            _doc["brew"]["pre_infusion"]["pause"] = PRE_INFUSION_PAUSE_TIME;
+
+            // Steam
+            _doc["steam"]["setpoint"] = STEAMSETPOINT;
+
+            // Backflushing
+            _doc["backflush"]["cycles"] = BACKFLUSH_CYCLES;
+            _doc["backflush"]["fill_time"] = BACKFLUSH_FILL_TIME;
+            _doc["backflush"]["flush_time"] = BACKFLUSH_FLUSH_TIME;
+
+            // Standby
+            _doc["standby"]["enabled"] = false;
+            _doc["standby"]["time"] = STANDBY_MODE_TIME;
+
+            // Features
+            _doc["features"]["brew_control"] = false;
+
+            // MQTT
+            _doc["mqtt"]["enabled"] = false;
+            _doc["mqtt"]["broker"] = "";
+            _doc["mqtt"]["port"] = 1883;
+            _doc["mqtt"]["username"] = MQTT_USERNAME;
+            _doc["mqtt"]["password"] = MQTT_PASSWORD;
+            _doc["mqtt"]["topic"] = MQTT_TOPIC;
+            _doc["mqtt"]["hassio"]["enabled"] = false;
+            _doc["mqtt"]["hassio"]["prefix"] = MQTT_HASSIO_PREFIX;
+
+            // System
+            _doc["system"]["hostname"] = HOSTNAME;
+            _doc["system"]["ota_password"] = OTAPASS;
+            _doc["system"]["offline_mode"] = false;
+            _doc["system"]["log_level"] = static_cast<int>(Logger::Level::INFO);
+
+            // Display
+            _doc["display"]["template"] = 0;
+            _doc["display"]["language"] = 0;
+            _doc["display"]["fullscreen_brew_timer"] = false;
+            _doc["display"]["fullscreen_manual_flush_timer"] = false;
+            _doc["display"]["post_brew_timer_duration"] = POST_BREW_TIMER_DURATION;
+            _doc["display"]["heating_logo"] = true;
+            _doc["display"]["pid_off_logo"] = true;
+
+            // Hardware
+            _doc["hardware"]["oled"]["enabled"] = true;
+            _doc["hardware"]["oled"]["rotation"] = 0;
+            _doc["hardware"]["oled"]["type"] = 0;
+            _doc["hardware"]["oled"]["address"] = 0x3C;
+
+            _doc["hardware"]["relays"]["heater"]["trigger_type"] = Relay::HIGH_TRIGGER;
+            _doc["hardware"]["relays"]["pump_valve"]["trigger_type"] = Relay::HIGH_TRIGGER;
+
+            _doc["hardware"]["switches"]["brew"]["enabled"] = false;
+            _doc["hardware"]["switches"]["brew"]["type"] = static_cast<int>(Switch::TOGGLE);
+            _doc["hardware"]["switches"]["brew"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
+            _doc["hardware"]["switches"]["steam"]["enabled"] = false;
+            _doc["hardware"]["switches"]["steam"]["type"] = static_cast<int>(Switch::TOGGLE);
+            _doc["hardware"]["switches"]["steam"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
+            _doc["hardware"]["switches"]["power"]["enabled"] = false;
+            _doc["hardware"]["switches"]["power"]["type"] = static_cast<int>(Switch::TOGGLE);
+            _doc["hardware"]["switches"]["power"]["mode"] = static_cast<int>(Switch::NORMALLY_OPEN);
+
+            _doc["hardware"]["leds"]["status"]["enabled"] = false;
+            _doc["hardware"]["leds"]["status"]["inverted"] = false;
+            _doc["hardware"]["leds"]["brew"]["enabled"] = false;
+            _doc["hardware"]["leds"]["brew"]["inverted"] = false;
+            _doc["hardware"]["leds"]["steam"]["enabled"] = false;
+            _doc["hardware"]["leds"]["steam"]["inverted"] = false;
+
+            _doc["hardware"]["sensors"]["temperature"]["type"] = 0;
+
+            _doc["hardware"]["sensors"]["pressure"]["enabled"] = false;
+
+            _doc["hardware"]["sensors"]["watertank"]["enabled"] = false;
+            _doc["hardware"]["sensors"]["watertank"]["mode"] = static_cast<int>(Switch::NORMALLY_CLOSED);
+
+            // Scale
+            _doc["hardware"]["sensors"]["scale"]["enabled"] = false;
+            _doc["hardware"]["sensors"]["scale"]["samples"] = SCALE_SAMPLES;
+            _doc["hardware"]["sensors"]["scale"]["type"] = 0;
+            _doc["hardware"]["sensors"]["scale"]["calibration"] = SCALE_CALIBRATION_FACTOR;
+            _doc["hardware"]["sensors"]["scale"]["calibration2"] = SCALE2_CALIBRATION_FACTOR;
+            _doc["hardware"]["sensors"]["scale"]["known_weight"] = SCALE_KNOWN_WEIGHT;
+        }
 
         bool validateAndApplyConfig(const JsonDocument& doc) {
             // PID parameters
@@ -1398,7 +1454,7 @@ class Config {
 
             // Scale
             if (doc["hardware"]["sensors"]["scale"].containsKey("calibration")) {
-                const float value = doc["scale"]["calibration"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["calibration"].as<float>();
 
                 if (!validateParameterRange("scale.calibration", static_cast<double>(value), SCALE_CALIBRATION_MIN, SCALE_CALIBRATION_MAX)) {
                     return false;
@@ -1408,7 +1464,7 @@ class Config {
             }
 
             if (doc["hardware"]["sensors"]["scale"].containsKey("calibration2")) {
-                const float value = doc["scale"]["calibration2"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["calibration2"].as<float>();
 
                 if (!validateParameterRange("scale.calibration2", static_cast<double>(value), SCALE2_CALIBRATION_MIN, SCALE2_CALIBRATION_MAX)) {
                     return false;
@@ -1418,7 +1474,7 @@ class Config {
             }
 
             if (doc["hardware"]["sensors"]["scale"].containsKey("known_weight")) {
-                const float value = doc["scale"]["known_weight"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["known_weight"].as<float>();
 
                 if (!validateParameterRange("scale.known_weight", static_cast<double>(value), SCALE_KNOWN_WEIGHT_MIN, SCALE_KNOWN_WEIGHT_MAX)) {
                     return false;
@@ -1427,7 +1483,7 @@ class Config {
                 setScaleKnownWeight(value);
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("enabled")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("enabled")) {
                 if (!doc["hardware"]["sensors"]["scale"]["enabled"].is<bool>()) {
                     return false;
                 }
@@ -1435,7 +1491,7 @@ class Config {
                 setScaleEnabled(doc["hardware"]["sensors"]["scale"]["enabled"].as<bool>());
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("samples")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("samples")) {
                 int value = doc["hardware"]["sensors"]["scale"]["samples"].as<int>();
 
                 if (!validateParameterRange("hardware.sensors.scale.samples", value, 1, 10)) {
@@ -1445,7 +1501,7 @@ class Config {
                 setScaleSamples(value);
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("type")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("type")) {
                 int value = doc["hardware"]["sensors"]["scale"]["type"].as<int>();
 
                 if (!validateParameterRange("hardware.sensors.scale.type", value, 0, 1)) {
@@ -1453,15 +1509,6 @@ class Config {
                 }
 
                 setScaleType(value);
-            }
-
-            // WiFi parameters
-            if (doc["wifi"].containsKey("credentials_saved")) {
-                if (!doc["wifi"]["credentials_saved"].is<bool>()) {
-                    return false;
-                }
-
-                setWifiCredentialsSaved(doc["wifi"]["credentials_saved"].as<bool>());
             }
 
             return save();
