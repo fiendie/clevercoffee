@@ -153,7 +153,7 @@ class Config {
             _doc["hardware"]["sensors"]["scale"]["samples"] = SCALE_SAMPLES;
             _doc["hardware"]["sensors"]["scale"]["type"] = 0;
             _doc["hardware"]["sensors"]["scale"]["calibration"] = SCALE_CALIBRATION_FACTOR;
-            _doc["hardware"]["sensors"]["scale"]["calibration2"] = SCALE_CALIBRATION_FACTOR;
+            _doc["hardware"]["sensors"]["scale"]["calibration2"] = SCALE2_CALIBRATION_FACTOR;
             _doc["hardware"]["sensors"]["scale"]["known_weight"] = SCALE_KNOWN_WEIGHT;
 
             // WiFi credentials flag
@@ -817,7 +817,7 @@ class Config {
         }
 
         float getScale2Calibration() {
-            return _doc["hardware"]["sensors"]["scale"]["calibration2"] | static_cast<float>(SCALE_CALIBRATION_FACTOR);
+            return _doc["hardware"]["sensors"]["scale"]["calibration2"] | static_cast<float>(SCALE2_CALIBRATION_FACTOR);
         }
 
         void setScale2Calibration(const float value) {
@@ -1398,7 +1398,7 @@ class Config {
 
             // Scale
             if (doc["hardware"]["sensors"]["scale"].containsKey("calibration")) {
-                const float value = doc["scale"]["calibration"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["calibration"].as<float>();
 
                 if (!validateParameterRange("scale.calibration", static_cast<double>(value), SCALE_CALIBRATION_MIN, SCALE_CALIBRATION_MAX)) {
                     return false;
@@ -1408,7 +1408,7 @@ class Config {
             }
 
             if (doc["hardware"]["sensors"]["scale"].containsKey("calibration2")) {
-                const float value = doc["scale"]["calibration2"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["calibration2"].as<float>();
 
                 if (!validateParameterRange("scale.calibration2", static_cast<double>(value), SCALE2_CALIBRATION_MIN, SCALE2_CALIBRATION_MAX)) {
                     return false;
@@ -1418,7 +1418,7 @@ class Config {
             }
 
             if (doc["hardware"]["sensors"]["scale"].containsKey("known_weight")) {
-                const float value = doc["scale"]["known_weight"].as<float>();
+                const float value = doc["hardware"]["sensors"]["scale"]["known_weight"].as<float>();
 
                 if (!validateParameterRange("scale.known_weight", static_cast<double>(value), SCALE_KNOWN_WEIGHT_MIN, SCALE_KNOWN_WEIGHT_MAX)) {
                     return false;
@@ -1427,7 +1427,7 @@ class Config {
                 setScaleKnownWeight(value);
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("enabled")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("enabled")) {
                 if (!doc["hardware"]["sensors"]["scale"]["enabled"].is<bool>()) {
                     return false;
                 }
@@ -1435,7 +1435,7 @@ class Config {
                 setScaleEnabled(doc["hardware"]["sensors"]["scale"]["enabled"].as<bool>());
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("samples")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("samples")) {
                 int value = doc["hardware"]["sensors"]["scale"]["samples"].as<int>();
 
                 if (!validateParameterRange("hardware.sensors.scale.samples", value, 1, 10)) {
@@ -1445,7 +1445,7 @@ class Config {
                 setScaleSamples(value);
             }
 
-            if (doc["hardware"]["sensors"]["hardware"]["sensors"]["scale"].containsKey("type")) {
+            if (doc["hardware"]["sensors"]["scale"].containsKey("type")) {
                 int value = doc["hardware"]["sensors"]["scale"]["type"].as<int>();
 
                 if (!validateParameterRange("hardware.sensors.scale.type", value, 0, 1)) {

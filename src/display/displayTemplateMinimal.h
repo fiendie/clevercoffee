@@ -77,7 +77,7 @@ void printScreen() {
     u8g2.setFont(u8g2_font_profont11_tf);
 
 // Brew time
-#if (FEATURE_BREWSWITCH == 1)
+if(config.getBrewSwitchEnabled()) {
     if (featureBrewControl) {
         // Shown brew time
         if (shouldDisplayBrewTimer()) {
@@ -106,7 +106,7 @@ void printScreen() {
             u8g2.print(currBrewTime / 1000, 0);
         }
     }
-#endif
+}
 
     // Show heater output in %
     displayProgressbar(pidOutput / 10, 15, 60, 100);

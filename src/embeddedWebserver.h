@@ -262,7 +262,6 @@ inline void serverSetup() {
         request->redirect("/");
     });
 
-#if FEATURE_SCALE == 1
     server.on("/toggleTareScale", HTTP_POST, [](AsyncWebServerRequest* request) {
         int tare = flipUintValue(scaleTareOn);
 
@@ -280,7 +279,6 @@ inline void serverSetup() {
 
         request->redirect("/");
     });
-#endif
 
     server.on("/parameters", HTTP_GET | HTTP_POST, [](AsyncWebServerRequest* request) {
         auto& registry = ParameterRegistry::getInstance();
