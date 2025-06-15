@@ -192,11 +192,7 @@ double aggbKp = AGGBKP;
 double aggbTn = AGGBTN;
 double aggbTv = AGGBTV;
 
-#if aggbTn == 0
-double aggbKi = 0;
-#else
-double aggbKi = aggbKp / aggbTn;
-#endif
+double aggbKi = (aggbTn == 0) ? 0 : aggbKp / aggbTn;
 
 double aggbKd = aggbTv * aggbKp;
 double brewPIDDelay = BREW_PID_DELAY; // Time PID will be disabled after brew started
@@ -217,11 +213,7 @@ double startKi = 0;
 double startKi = startKp / startTn;
 #endif
 
-#if aggTn == 0
-double aggKi = 0;
-#else
-double aggKi = aggKp / aggTn;
-#endif
+double aggKi = (aggTn == 0) ? 0 : aggKp / aggTn;
 
 double aggKd = aggTv * aggKp;
 
@@ -1175,17 +1167,17 @@ void looppid() {
         }
     }
 
-#if FEATURE_SCALE == 1
+if(config.getScaleEnabled()) {
     checkWeight();    // Check Weight Scale in the loop
     shottimerscale(); // Calculation of weight of shot while brew is running
-#endif
+}
 
-#if (FEATURE_BREWSWITCH == 1)
+if(config.getBrewSwitchEnabled()) {
     brew();
     manualFlush();
-#endif
+}
 
-#if (FEATURE_PRESSURESENSOR == 1)
+if(config.getPressureSensorEnabled()) {
     unsigned long currentMillisPressure = millis();
 
     if (currentMillisPressure - previousMillisPressure >= intervalPressure) {
@@ -1193,7 +1185,7 @@ void looppid() {
         inputPressure = measurePressure();
         inputPressureFilter = filterPressureValue(inputPressure);
     }
-#endif
+}
 
     checkSteamSwitch();
     checkPowerSwitch();
@@ -1210,9 +1202,10 @@ void looppid() {
     handleMachineState();
 
     // Check if brew timer should be shown
-#if (FEATURE_BREWSWITCH == 1)
+
+if(config.getBrewSwitchEnabled()) {
     shouldDisplayBrewTimer();
-#endif
+}
 
     // Check if PID should run or not. If not, set to manual and force output to zero
 #if OLED_DISPLAY != 0

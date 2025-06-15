@@ -65,7 +65,7 @@ void printScreen() {
     }
 
 // Brew and flush time
-#if (FEATURE_BREWSWITCH == 1)
+if(config.getBrewSwitchEnabled()) {
 
     if (featureBrewControl) {
         // Shown brew time
@@ -86,7 +86,7 @@ void printScreen() {
             displayBrewTime(34, 36, langstring_brew, currBrewTime);
         }
     }
-#endif
+}
 
     // PID values over heat bar
     u8g2.setCursor(38, 47);

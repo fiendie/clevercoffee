@@ -58,10 +58,10 @@ void printScreen() {
     u8g2.print((char)176);
     u8g2.print("C");
 
-#if (FEATURE_SCALE == 1)
-    // Show current weight if scale has no error
-    displayBrewWeight(32, 26, currReadingWeight, -1, scaleFailure);
-
+    if (config.getScaleEnabled()) {
+        // Show current weight if scale has no error
+        displayBrewWeight(32, 26, currReadingWeight, -1, scaleFailure);
+    }
     /**
      * @brief Shot timer for scale
      *
@@ -72,9 +72,8 @@ void printScreen() {
      * if FEATURE_PRESSURESENSOR is enabled show current pressure during brew
      * if brew is finished show brew values for postBrewTimerDuration
      */
-#endif
 
-#if (FEATURE_BREWSWITCH == 1)
+if(config.getBrewSwitchEnabled()) {
 
     if (featureBrewControl) {
 
@@ -87,9 +86,9 @@ void printScreen() {
             u8g2.drawBox(32, 27, 100, 10);
             u8g2.setDrawColor(1);
 
-#if (FEATURE_SCALE == 1)
-            displayBrewWeight(32, 26, currBrewWeight, targetBrewWeight, scaleFailure);
-#endif
+            if (config.getScaleEnabled()) {
+                displayBrewWeight(32, 26, currBrewWeight, targetBrewWeight, scaleFailure);
+            }
         }
         // Shown flush time while machine is flushing
         if (machineState == kManualFlush) {
@@ -109,18 +108,18 @@ void printScreen() {
             u8g2.setDrawColor(0);
             u8g2.drawBox(32, 27, 100, 10);
             u8g2.setDrawColor(1);
-#if (FEATURE_SCALE == 1)
-            displayBrewWeight(32, 26, currBrewWeight, -1, scaleFailure);
-#endif
+            if (config.getScaleEnabled()) {
+                displayBrewWeight(32, 26, currBrewWeight, -1, scaleFailure);
+            }
         }
     }
-#endif
+}
 
-#if (FEATURE_PRESSURESENSOR == 1)
+if (config.getPressureSensorEnabled()) {
     u8g2.setCursor(32, 46);
     u8g2.print(langstring_pressure);
     u8g2.print(inputPressure, 1);
-#endif
+}
 
     // Show heater output in %
     displayProgressbar(pidOutput / 10, 30, 60, 98);
