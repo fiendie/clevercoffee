@@ -463,7 +463,11 @@ void ParameterRegistry::initialize(Config& config) {
         (const char* const[]){"Standard", "Minimal", "Temp only", "Scale"}, 4, true, "Set the display template, changes requre a reboot", [] { return true; }));
 
     addParam(std::make_shared<Parameter>(
-        "FULLSCREEN_BREW_TIMER", "Enable Fullscreen Brew Timer", kUInt8, sDisplaySection, 36,
+        "DISPLAY_Language", "Display Language", kEnum, sDisplaySection, 36, [&config] { return config.getDisplayLanguage(); }, [&config](const double val) { config.setDisplayLanguage(val); },
+        (const char* const[]){"Deutsch", "English", "Español"}, 3, true, "Set the language for the OLED display, changes requre a reboot", [] { return true; }));
+
+    addParam(std::make_shared<Parameter>(
+        "FULLSCREEN_BREW_TIMER", "Enable Fullscreen Brew Timer", kUInt8, sDisplaySection, 37,
         [&config]() -> bool {
             featureFullscreenBrewTimer = config.getFeatureFullscreenBrewTimer();
             return featureFullscreenBrewTimer;
@@ -475,7 +479,7 @@ void ParameterRegistry::initialize(Config& config) {
         true, "Enable fullscreen overlay during brew", [] { return true; }, &featureFullscreenBrewTimer));
 
     addParam(std::make_shared<Parameter>(
-        "FULLSCREEN_MANUAL_FLUSH_TIMER", "Enable Fullscreen Manual Flush Timer", kUInt8, sDisplaySection, 37,
+        "FULLSCREEN_MANUAL_FLUSH_TIMER", "Enable Fullscreen Manual Flush Timer", kUInt8, sDisplaySection, 38,
         [&config]() -> bool {
             featureFullscreenManualFlushTimer = config.getFeatureFullscreenManualFlushTimer();
             return featureFullscreenManualFlushTimer;
@@ -487,7 +491,7 @@ void ParameterRegistry::initialize(Config& config) {
         true, "Enable fullscreen overlay during manual flush", [] { return true; }, &featureFullscreenManualFlushTimer));
 
     addParam(std::make_shared<Parameter>(
-        "POST_BREW_TIMER_DURATION", "Post Brew Timer Duration (s)", kDouble, sDisplaySection, 38,
+        "POST_BREW_TIMER_DURATION", "Post Brew Timer Duration (s)", kDouble, sDisplaySection, 39,
         [&config] {
             postBrewTimerDuration = config.getPostBrewTimerDuration();
             return postBrewTimerDuration;
@@ -499,7 +503,7 @@ void ParameterRegistry::initialize(Config& config) {
         POST_BREW_TIMER_DURATION_MIN, POST_BREW_TIMER_DURATION_MAX, true, "time in s that brew timer will be shown after brew finished", [] { return true; }, &postBrewTimerDuration));
 
     addParam(std::make_shared<Parameter>(
-        "HEATING_LOGO", "Enable Heating Logo", kUInt8, sDisplaySection, 39,
+        "HEATING_LOGO", "Enable Heating Logo", kUInt8, sDisplaySection, 40,
         [&config]() -> bool {
             featureHeatingLogo = config.getFeatureHeatingLogo();
             return featureHeatingLogo;
@@ -511,7 +515,7 @@ void ParameterRegistry::initialize(Config& config) {
         true, "full screen logo will be shown if temperature is 5°C below setpoint", [] { return true; }, &featureHeatingLogo));
 
     addParam(std::make_shared<Parameter>(
-        "PID_OFF_LOGO", "Enable 'PID Disabled' Logo", kUInt8, sDisplaySection, 40,
+        "PID_OFF_LOGO", "Enable 'PID Disabled' Logo", kUInt8, sDisplaySection, 41,
         [&config]() -> bool {
             featurePidOffLogo = config.getFeaturePidOffLogo();
             return featurePidOffLogo;
@@ -523,54 +527,54 @@ void ParameterRegistry::initialize(Config& config) {
         true, "full screen logo will be shown if pid is disabled", [] { return true; }, &featurePidOffLogo));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_ENABLED", "MQTT enabled", kUInt8, sMqttSection, 41, [&config]() -> bool { return config.getMqttEnabled(); }, [&config](const bool val) { config.setMqttEnabled(val); }, true, "Enables MQTT, requires a restart",
+        "MQTT_ENABLED", "MQTT enabled", kUInt8, sMqttSection, 42, [&config]() -> bool { return config.getMqttEnabled(); }, [&config](const bool val) { config.setMqttEnabled(val); }, true, "Enables MQTT, requires a restart",
         []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_BROKER", "Hostname", kCString, sMqttSection, 42, [&config] { return config.getMqttBroker(); }, [&config](const String& val) { config.setMqttBroker(val); }, MQTT_BROKER_MAX_LENGTH, true,
+        "MQTT_BROKER", "Hostname", kCString, sMqttSection, 43, [&config] { return config.getMqttBroker(); }, [&config](const String& val) { config.setMqttBroker(val); }, MQTT_BROKER_MAX_LENGTH, true,
         "IP addresss or hostname of your MQTT broker, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_PORT", "Port", kInteger, sMqttSection, 43, [&config] { return static_cast<double>(config.getMqttPort()); }, [&config](const double val) { config.setMqttPort(static_cast<int>(val)); }, 0.0, 99999.0, true,
+        "MQTT_PORT", "Port", kInteger, sMqttSection, 44, [&config] { return static_cast<double>(config.getMqttPort()); }, [&config](const double val) { config.setMqttPort(static_cast<int>(val)); }, 0.0, 99999.0, true,
         "Port number of your MQTT broker, changes require a restart", []() -> bool { return true; }, static_cast<void*>(nullptr)));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_USERNAME", "Username", kCString, sMqttSection, 44, [&config] { return config.getMqttUsername(); }, [&config](const String& val) { config.setMqttUsername(val); }, MQTT_USERNAME_MAX_LENGTH, true,
+        "MQTT_USERNAME", "Username", kCString, sMqttSection, 45, [&config] { return config.getMqttUsername(); }, [&config](const String& val) { config.setMqttUsername(val); }, MQTT_USERNAME_MAX_LENGTH, true,
         "Username for your MQTT broker, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_PASSWORD", "Password", kCString, sMqttSection, 45, [&config] { return config.getMqttPassword(); }, [&config](const String& val) { config.setMqttPassword(val); }, MQTT_PASSWORD_MAX_LENGTH, true,
+        "MQTT_PASSWORD", "Password", kCString, sMqttSection, 46, [&config] { return config.getMqttPassword(); }, [&config](const String& val) { config.setMqttPassword(val); }, MQTT_PASSWORD_MAX_LENGTH, true,
         "Password for your MQTT broker, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_TOPIC", "Topic Prefix", kCString, sMqttSection, 46, [&config] { return config.getMqttTopic(); }, [&config](const String& val) { config.setMqttTopic(val); }, MQTT_TOPIC_MAX_LENGTH, true,
+        "MQTT_TOPIC", "Topic Prefix", kCString, sMqttSection, 47, [&config] { return config.getMqttTopic(); }, [&config](const String& val) { config.setMqttTopic(val); }, MQTT_TOPIC_MAX_LENGTH, true,
         "Custom MQTT topic prefix, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_HASSIO_ENABLED", "Hass.io enabled", kUInt8, sMqttSection, 47, [&config]() -> bool { return config.getMqttHassioEnabled(); }, [&config](const bool val) { config.setMqttHassioEnabled(val); }, true,
+        "MQTT_HASSIO_ENABLED", "Hass.io enabled", kUInt8, sMqttSection, 48, [&config]() -> bool { return config.getMqttHassioEnabled(); }, [&config](const bool val) { config.setMqttHassioEnabled(val); }, true,
         "Enables Home Assistant integration, requires a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "MQTT_HASSIO_PREFIX", "Hass.io Prefix", kCString, sMqttSection, 48, [&config] { return config.getMqttHassioPrefix(); }, [&config](const String& val) { config.setMqttHassioPrefix(val); }, MQTT_HASSIO_PREFIX_MAX_LENGTH,
+        "MQTT_HASSIO_PREFIX", "Hass.io Prefix", kCString, sMqttSection, 49, [&config] { return config.getMqttHassioPrefix(); }, [&config](const String& val) { config.setMqttHassioPrefix(val); }, MQTT_HASSIO_PREFIX_MAX_LENGTH,
         true, "Custom MQTT topic prefix, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "HOSTNAME", "Hostname", kCString, sSystemSection, 49, [&config] { return config.getHostname(); }, [&config](const String& val) { config.setHostname(val); }, HOSTNAME_MAX_LENGTH, true,
+        "HOSTNAME", "Hostname", kCString, sSystemSection, 50, [&config] { return config.getHostname(); }, [&config](const String& val) { config.setHostname(val); }, HOSTNAME_MAX_LENGTH, true,
         "Hostname of your machine, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "OTA_PASSWORD", "OtA Password", kCString, sSystemSection, 50, [&config] { return config.getOtaPass(); }, [&config](const String& val) { config.setOtaPass(val); }, OTAPASS_MAX_LENGTH, true,
+        "OTA_PASSWORD", "OtA Password", kCString, sSystemSection, 51, [&config] { return config.getOtaPass(); }, [&config](const String& val) { config.setOtaPass(val); }, OTAPASS_MAX_LENGTH, true,
         "Password for over-the-air updates, changes require a restart", []() -> bool { return true; }, nullptr));
 
     addParam(std::make_shared<Parameter>(
-        "LOG_LEVEL", "Log Level", kEnum, sSystemSection, 51, [&config] { return config.getLogLevel(); },
+        "LOG_LEVEL", "Log Level", kEnum, sSystemSection, 52, [&config] { return config.getLogLevel(); },
         [&config](const double val) {
             config.setLogLevel(val);
             Logger::setLevel(static_cast<Logger::Level>(val));
         },
         (const char* const[]){"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "SILENT"}, 7, true, "Set the logging verbosity level", [] { return true; }));
 
-    addParam(std::make_shared<Parameter>("VERSION", "Version", kCString, sOtherSection, 52, [] { return sysVersion; }, nullptr, 64, false, "", [] { return false; }, nullptr));
+    addParam(std::make_shared<Parameter>("VERSION", "Version", kCString, sOtherSection, 53, [] { return sysVersion; }, nullptr, 64, false, "", [] { return false; }, nullptr));
 
     std::sort(_parameters.begin(), _parameters.end(), [](const std::shared_ptr<Parameter>& a, const std::shared_ptr<Parameter>& b) { return a->getPosition() < b->getPosition(); });
 

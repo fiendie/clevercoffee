@@ -1146,48 +1146,6 @@ class Config {
                 setFeatureBrewControl(doc["features"]["brew_control"].as<bool>());
             }
 
-            if (doc["display"].containsKey("fullscreen_brew_timer")) {
-                if (!doc["display"]["fullscreen_brew_timer"].is<bool>()) {
-                    return false;
-                }
-
-                setFeatureFullscreenBrewTimer(doc["features"]["fullscreen_brew_timer"].as<bool>());
-            }
-
-            if (doc["display"].containsKey("fullscreen_manual_flush_timer")) {
-                if (!doc["display"]["fullscreen_manual_flush_timer"].is<bool>()) {
-                    return false;
-                }
-
-                setFeatureFullscreenManualFlushTimer(doc["display"]["fullscreen_manual_flush_timer"].as<bool>());
-            }
-
-            if (doc["display"].containsKey("post_brew_timer_duration")) {
-                const double value = doc["display"]["post_brew_timer_duration"].as<double>();
-
-                if (!validateParameterRange("display.post_brew_timer_duration", value, POST_BREW_TIMER_DURATION_MIN, POST_BREW_TIMER_DURATION_MAX)) {
-                    return false;
-                }
-
-                setPostBrewTimerDuration(value);
-            }
-
-            if (doc["display"].containsKey("heating_logo")) {
-                if (!doc["display"]["heating_logo"].is<bool>()) {
-                    return false;
-                }
-
-                setFeatureHeatingLogo(doc["display"]["heating_logo"].as<bool>());
-            }
-
-            if (doc["display"].containsKey("pid_off_logo")) {
-                if (!doc["display"]["pid_off_logo"].is<bool>()) {
-                    return false;
-                }
-
-                setFeaturePidOffLogo(doc["display"]["pid_off_logo"].as<bool>());
-            }
-
             // MQTT parameters
             if (doc["mqtt"].containsKey("enabled")) {
                 if (!doc["mqtt"]["enabled"].is<bool>()) {
@@ -1261,6 +1219,7 @@ class Config {
                 setLogLevel(value);
             }
 
+            // Display parameters
             if (doc["display"].containsKey("template")) {
                 const int value = doc["display"]["template"].as<int>();
 
@@ -1269,6 +1228,58 @@ class Config {
                 }
 
                 setDisplayTemplate(value);
+            }
+
+            if (doc["display"].containsKey("language")) {
+                const int value = doc["display"]["language"].as<int>();
+
+                if (value < 0 || value > 2) {
+                    return false;
+                }
+
+                setDisplayLanguage(value);
+            }
+
+            if (doc["display"].containsKey("fullscreen_brew_timer")) {
+                if (!doc["display"]["fullscreen_brew_timer"].is<bool>()) {
+                    return false;
+                }
+
+                setFeatureFullscreenBrewTimer(doc["features"]["fullscreen_brew_timer"].as<bool>());
+            }
+
+            if (doc["display"].containsKey("fullscreen_manual_flush_timer")) {
+                if (!doc["display"]["fullscreen_manual_flush_timer"].is<bool>()) {
+                    return false;
+                }
+
+                setFeatureFullscreenManualFlushTimer(doc["display"]["fullscreen_manual_flush_timer"].as<bool>());
+            }
+
+            if (doc["display"].containsKey("post_brew_timer_duration")) {
+                const double value = doc["display"]["post_brew_timer_duration"].as<double>();
+
+                if (!validateParameterRange("display.post_brew_timer_duration", value, POST_BREW_TIMER_DURATION_MIN, POST_BREW_TIMER_DURATION_MAX)) {
+                    return false;
+                }
+
+                setPostBrewTimerDuration(value);
+            }
+
+            if (doc["display"].containsKey("heating_logo")) {
+                if (!doc["display"]["heating_logo"].is<bool>()) {
+                    return false;
+                }
+
+                setFeatureHeatingLogo(doc["display"]["heating_logo"].as<bool>());
+            }
+
+            if (doc["display"].containsKey("pid_off_logo")) {
+                if (!doc["display"]["pid_off_logo"].is<bool>()) {
+                    return false;
+                }
+
+                setFeaturePidOffLogo(doc["display"]["pid_off_logo"].as<bool>());
             }
 
             // Hardware - Relays
