@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
 #include <functional>
-#include <utility>
 
 enum EditableKind {
     kInteger,
@@ -15,6 +15,7 @@ enum EditableKind {
 
 class Parameter {
     public:
+        // Constructor for general parameters with string getters/setters
         Parameter(
             const char* id,
             const char* displayName,
@@ -30,27 +31,9 @@ class Parameter {
             std::function<bool()> showCondition = [] { return true; },
             std::function<String()> stringGetter = nullptr,
             std::function<void(const String&)> stringSetter = nullptr,
-            void* globalVariablePointer = nullptr) :
-            _id(id),
-            _displayName(displayName),
-            _type(type),
-            _section(section),
-            _position(position),
-            _getter(std::move(getter)),
-            _setter(std::move(setter)),
-            _minValue(minValue),
-            _maxValue(maxValue),
-            _enumOptions(nullptr),
-            _enumCount(0),
-            _hasHelpText(hasHelpText),
-            _helpText(helpText),
-            _showCondition(std::move(showCondition)),
-            _stringGetter(std::move(stringGetter)),
-            _stringSetter(std::move(stringSetter)),
-            _globalVariablePointer(globalVariablePointer) {
-        }
+            void* globalVariablePointer = nullptr);
 
-        // For string parameters
+        // Constructor for string parameters
         Parameter(
             const char* id,
             const char* displayName,
@@ -63,27 +46,9 @@ class Parameter {
             bool hasHelpText = false,
             const char* helpText = "",
             const std::function<bool()>& showCondition = [] { return true; },
-            void* globalVariablePointer = nullptr) :
-            _id(id),
-            _displayName(displayName),
-            _type(type),
-            _section(section),
-            _position(position),
-            _getter(nullptr),
-            _setter(nullptr),
-            _minValue(0),
-            _maxValue(maxLength),
-            _enumOptions(nullptr),
-            _enumCount(0),
-            _hasHelpText(hasHelpText),
-            _helpText(helpText),
-            _showCondition(showCondition),
-            _stringGetter(stringGetter),
-            _stringSetter(stringSetter),
-            _globalVariablePointer(globalVariablePointer) {
-        }
+            void* globalVariablePointer = nullptr);
 
-        // For numeric parameters (no string getter/setter)
+        // Constructor for numeric parameters (no string getter/setter)
         Parameter(
             const char* id,
             const char* displayName,
@@ -97,27 +62,9 @@ class Parameter {
             bool hasHelpText = false,
             const char* helpText = "",
             std::function<bool()> showCondition = [] { return true; },
-            void* globalVariablePointer = nullptr) :
-            _id(id),
-            _displayName(displayName),
-            _type(type),
-            _section(section),
-            _position(position),
-            _getter(std::move(getter)),
-            _setter(std::move(setter)),
-            _minValue(minValue),
-            _maxValue(maxValue),
-            _enumOptions(nullptr),
-            _enumCount(0),
-            _hasHelpText(hasHelpText),
-            _helpText(helpText),
-            _showCondition(std::move(showCondition)),
-            _stringGetter(nullptr),
-            _stringSetter(nullptr),
-            _globalVariablePointer(globalVariablePointer) {
-        }
+            void* globalVariablePointer = nullptr);
 
-        // For boolean parameters (using kUInt8 type with 0/1 values)
+        // Constructor for boolean parameters (using kUInt8 type with 0/1 values)
         Parameter(
             const char* id,
             const char* displayName,
@@ -129,27 +76,9 @@ class Parameter {
             bool hasHelpText = false,
             const char* helpText = "",
             const std::function<bool()>& showCondition = [] { return true; },
-            void* globalVariablePointer = nullptr) :
-            _id(id),
-            _displayName(displayName),
-            _type(type),
-            _section(section),
-            _position(position),
-            _getter([boolGetter] { return boolGetter() ? 1.0 : 0.0; }),
-            _setter([boolSetter](const double val) { boolSetter(val > 0.5); }),
-            _minValue(0),
-            _maxValue(1),
-            _enumOptions(nullptr),
-            _enumCount(0),
-            _hasHelpText(hasHelpText),
-            _helpText(helpText),
-            _showCondition(showCondition),
-            _stringGetter(nullptr),
-            _stringSetter(nullptr),
-            _globalVariablePointer(globalVariablePointer) {
-        }
+            void* globalVariablePointer = nullptr);
 
-        // For enum parameters
+        // Constructor for enum parameters
         Parameter(
             const char* id,
             const char* displayName,
@@ -163,200 +92,35 @@ class Parameter {
             bool hasHelpText = false,
             const char* helpText = "",
             const std::function<bool()>& showCondition = [] { return true; },
-            void* globalVariablePointer = nullptr) :
-            _id(id),
-            _displayName(displayName),
-            _type(type),
-            _section(section),
-            _position(position),
-            _getter(getter),
-            _setter(setter),
-            _enumOptions(enumOptions),
-            _enumCount(enumCount),
-            _minValue(0),
-            _maxValue(static_cast<double>(enumCount - 1)),
-            _hasHelpText(hasHelpText),
-            _helpText(helpText),
-            _showCondition(showCondition),
-            _stringGetter(nullptr),
-            _stringSetter(nullptr),
-            _globalVariablePointer(globalVariablePointer) {
-        }
+            void* globalVariablePointer = nullptr);
 
-        [[nodiscard]] const char* getId() const {
-            return _id;
-        }
-
-        [[nodiscard]] const char* getDisplayName() const {
-            return _displayName;
-        }
-
-        [[nodiscard]] EditableKind getType() const {
-            return _type;
-        }
-
-        [[nodiscard]] int getSection() const {
-            return _section;
-        }
-
-        [[nodiscard]] int getPosition() const {
-            return _position;
-        }
-
-        [[nodiscard]] double getValue() const {
-            return _getter();
-        }
-
-        void setValue(const double value) const {
-            _setter(value);
-            syncToGlobalVariable(value);
-        }
-
-        [[nodiscard]] bool getBoolValue() const {
-            return getValue() != 0.0;
-        }
-
-        [[nodiscard]] int getIntValue() const {
-            return static_cast<int>(getValue());
-        }
-
-        [[nodiscard]] float getFloatValue() const {
-            return static_cast<float>(getValue());
-        }
-
-        [[nodiscard]] uint8_t getUInt8Value() const {
-            return static_cast<uint8_t>(getValue());
-        }
-
-        [[nodiscard]] String getStringValue() const {
-            if (_stringGetter) {
-                return _stringGetter();
-            }
-            return {};
-        }
-
-        void setStringValue(const String& value) const {
-            if (_stringSetter) {
-                _stringSetter(value);
-                syncToGlobalVariable(value);
-            }
-        }
-
-        [[nodiscard]] double getMinValue() const {
-            return _minValue;
-        }
-
-        [[nodiscard]] double getMaxValue() const {
-            return _maxValue;
-        }
-
-        [[nodiscard]] bool hasHelpText() const {
-            return _hasHelpText;
-        }
-
-        [[nodiscard]] const char* getHelpText() const {
-            return _helpText;
-        }
-
-        [[nodiscard]] bool shouldShow() const {
-            return _showCondition();
-        }
-
-        [[nodiscard]] String getFormattedValue() const {
-            switch (_type) {
-                case kFloat:
-                    return String(getFloatValue());
-
-                case kDouble:
-                case kDoubletime:
-                    return String(getValue());
-
-                case kInteger:
-                    return String(getIntValue());
-
-                case kUInt8:
-                    return String(getUInt8Value());
-
-                case kCString:
-                    return getStringValue();
-
-                case kEnum:
-                    return getEnumDisplayValue();
-
-                default:
-                    return "Unknown type";
-            }
-        }
-
-        [[nodiscard]] const char* const* getEnumOptions() const {
-            return _enumOptions;
-        }
-
-        [[nodiscard]] size_t getEnumCount() const {
-            return _enumCount;
-        }
-
-        [[nodiscard]] bool isEnum() const {
-            return _type == kEnum;
-        }
-
-        [[nodiscard]] String getEnumDisplayValue() const {
-            if (!isEnum() || _enumOptions == nullptr) {
-                return "";
-            }
-
-            const int index = static_cast<int>(getValue());
-
-            return (index >= 0 && index < static_cast<int>(_enumCount)) ? String(_enumOptions[index]) : "";
-        }
-
-        [[nodiscard]] void* getGlobalVariablePointer() const {
-            return _globalVariablePointer;
-        }
-
-        void setGlobalVariablePointer(void* ptr) {
-            _globalVariablePointer = ptr;
-        }
-
-        void syncToGlobalVariable(const double value) const {
-            if (_globalVariablePointer == nullptr) return;
-
-            switch (_type) {
-                case kInteger:
-                    *static_cast<int*>(_globalVariablePointer) = static_cast<int>(value);
-                    break;
-
-                case kUInt8:
-                    *static_cast<uint8_t*>(_globalVariablePointer) = static_cast<uint8_t>(value);
-                    break;
-
-                case kDouble:
-                case kDoubletime:
-                    *static_cast<double*>(_globalVariablePointer) = value;
-                    break;
-
-                case kFloat:
-                    *static_cast<float*>(_globalVariablePointer) = static_cast<float>(value);
-                    break;
-
-                case kEnum:
-                    *static_cast<int*>(_globalVariablePointer) = static_cast<int>(value);
-                    break;
-
-                case kCString:
-                    break;
-            }
-        }
-
-        void syncToGlobalVariable(const String& value) const {
-            if (_globalVariablePointer == nullptr) {
-                return;
-            }
-
-            if (_type == kCString) {
-                *static_cast<String*>(_globalVariablePointer) = value;
-            }
-        }
+        [[nodiscard]] const char* getId() const;
+        [[nodiscard]] const char* getDisplayName() const;
+        [[nodiscard]] EditableKind getType() const;
+        [[nodiscard]] int getSection() const;
+        [[nodiscard]] int getPosition() const;
+        [[nodiscard]] double getValue() const;
+        void setValue(double value) const;
+        [[nodiscard]] bool getBoolValue() const;
+        [[nodiscard]] int getIntValue() const;
+        [[nodiscard]] float getFloatValue() const;
+        [[nodiscard]] uint8_t getUInt8Value() const;
+        [[nodiscard]] String getStringValue() const;
+        void setStringValue(const String& value) const;
+        [[nodiscard]] double getMinValue() const;
+        [[nodiscard]] double getMaxValue() const;
+        [[nodiscard]] bool hasHelpText() const;
+        [[nodiscard]] const char* getHelpText() const;
+        [[nodiscard]] bool shouldShow() const;
+        [[nodiscard]] String getFormattedValue() const;
+        [[nodiscard]] const char* const* getEnumOptions() const;
+        [[nodiscard]] size_t getEnumCount() const;
+        [[nodiscard]] bool isEnum() const;
+        [[nodiscard]] String getEnumDisplayValue() const;
+        [[nodiscard]] void* getGlobalVariablePointer() const;
+        void setGlobalVariablePointer(void* ptr);
+        void syncToGlobalVariable(double value) const;
+        void syncToGlobalVariable(const String& value) const;
 
     private:
         const char* _id;
