@@ -265,9 +265,12 @@ class Config {
             _configDefs.emplace("brew.temp_offset", ConfigDef::forDouble(TEMPOFFSET, BREW_TEMP_OFFSET_MIN, BREW_TEMP_OFFSET_MAX));
             _configDefs.emplace("brew.pid_delay", ConfigDef::forDouble(BREW_PID_DELAY, BREW_PID_DELAY_MIN, BREW_PID_DELAY_MAX));
             _configDefs.emplace("brew.target_time", ConfigDef::forDouble(TARGET_BREW_TIME, TARGET_BREW_TIME_MIN, TARGET_BREW_TIME_MAX));
+            _configDefs.emplace("brew.by_time", ConfigDef::forBool(false));
+            _configDefs.emplace("brew.by_weight", ConfigDef::forBool(false));
             _configDefs.emplace("brew.target_weight", ConfigDef::forDouble(TARGET_BREW_WEIGHT, TARGET_BREW_WEIGHT_MIN, TARGET_BREW_WEIGHT_MAX));
 
             // Pre-infusion
+            _configDefs.emplace("brew.pre_infusion.enabled", ConfigDef::forBool(false));
             _configDefs.emplace("brew.pre_infusion.time", ConfigDef::forDouble(PRE_INFUSION_TIME, PRE_INFUSION_TIME_MIN, PRE_INFUSION_TIME_MAX));
             _configDefs.emplace("brew.pre_infusion.pause", ConfigDef::forDouble(PRE_INFUSION_PAUSE_TIME, PRE_INFUSION_PAUSE_MIN, PRE_INFUSION_PAUSE_MAX));
 

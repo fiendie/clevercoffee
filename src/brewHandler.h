@@ -266,7 +266,11 @@ inline bool brew() {
 
         // set brew time every cycle, in case changes are done during brew
         if (targetBrewTime > 0) {
-            totalTargetBrewTime = preinfusion * 1000 + preinfusionPause * 1000 + targetBrewTime * 1000;
+            totalTargetBrewTime = targetBrewTime * 1000;
+
+            if (config.get<bool>("brew.pre_infusion.enabled")) {
+                totalTargetBrewTime += preinfusion * 1000 + preinfusionPause * 1000;
+            }
         }
         else {
             // Stop by time deactivated --> totalTargetBrewTime = 0
@@ -281,7 +285,7 @@ inline bool brew() {
                     currBrewTime = 0; // reset currBrewTime, last brew is still stored
                     LOG(INFO, "Brew started");
 
-                    if (preinfusionPause == 0 || preinfusion == 0) {
+                    if (!config.get<bool>("brew.pre_infusion.enabled") || preinfusionPause == 0 || preinfusion == 0) {
                         LOG(INFO, "Brew running");
                         currBrewState = kBrewRunning;
                     }
@@ -322,14 +326,12 @@ inline bool brew() {
                 pumpRelay->on();
                 debugPumpState("BrewRunning", "on");
 
-                // stop brew if target-time is reached --> No stop if stop by time is deactivated via Parameter (0)
-                if (currBrewTime > totalTargetBrewTime && targetBrewTime > 0) {
+                if (currBrewTime > totalTargetBrewTime && config.get<bool>("brew.by_time") && targetBrewTime > 0) {
                     LOG(INFO, "Brew reached time target");
                     currBrewState = kBrewFinished;
                 }
 
-                // stop brew if target-weight is reached --> No stop if stop by weight is deactivated via Parameter (0)
-                else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && targetBrewWeight > 0) {
+                else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && config.get<bool>("brew.by_weight") && targetBrewWeight > 0) {
                     LOG(INFO, "Brew reached weight target");
                     currBrewState = kBrewFinished;
                 }
@@ -355,9 +357,9 @@ inline bool brew() {
                 break;
         }
     }
-    else {                            // brewControlOn == 0, only brew time
+    else {
         switch (currBrewState) {
-            case kBrewIdle:           // waiting step for brew switch turning on
+            case kBrewIdle:
                 if (currBrewSwitchState == kBrewSwitchShortPressed) {
                     startingTime = millis();
                     currBrewTime = 0; // reset timeBrewed, last brew is still stored

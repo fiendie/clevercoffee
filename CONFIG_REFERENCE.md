@@ -46,11 +46,21 @@ This document describes all configuration parameters available in the `config.js
 - **Range**: 0.0-20.0
 - **Description**: Temperature offset to compensate for sensor placement or other dropoff
 
+### `brew.by_time`
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Enables brew by time, so the pump stops automatically when the target brew time is reached
+
 ### `brew.target_time`
 - **Type**: Double (seconds)
 - **Default**: `25.0`
 - **Range**: 1.0-120.0
 - **Description**: Target brew time for automatic brewing
+
+### `brew.by_weight`
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Enables brew by weight, so the pump stops automatically when the target weight is reached
 
 ### `brew.target_weight`
 - **Type**: Double (grams)
@@ -59,6 +69,11 @@ This document describes all configuration parameters available in the `config.js
 - **Description**: Target output weight for automatic brewing (requires scale)
 
 ## Pre-Infusion Settings
+
+### `brew.pre_infusion.enabled`
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Enables pre-wetting of the coffee puck by turning on the pump for a configurable length of time
 
 ### `brew.pre_infusion.time`
 - **Type**: Double (seconds)

@@ -52,6 +52,10 @@ extern const char sysVersion[64];
 extern bool includeDisplayInLogs;
 extern bool timingDebugActive;
 
+const char* switchTypes[2] = {"Momentary", "Toggle"};
+const char* switchModes[2] = {"Normally Open", "Normally Closed"};
+const char* relayTriggerTypes[2] = {"Low Trigger", "High Trigger"};
+
 void ParameterRegistry::initialize(Config& config) {
     if (_ready) {
         return;
@@ -218,8 +222,28 @@ void ParameterRegistry::initialize(Config& config) {
             sBrewSection,
             301,
             &featureBrewControl,
-            "Enables brew-by-time or brew-by-weight"
+            "Enables brew by time or brew by weight"
         );
+
+        addBoolConfigParam(
+            "brew.by_time",
+            "Brew by Time",
+            sBrewSection,
+            302,
+            nullptr,
+            "Enables brew by time, so the pump stops automatically when the target brew time is reached"
+        );
+
+        if (config.get<bool>("hardware.sensors.scale.enabled")) {
+            addBoolConfigParam(
+                "brew.by_weight",
+                "Brew by Weight",
+                sBrewSection,
+                303,
+                nullptr,
+                "Enables brew by weight, so the pump stops automatically when the target weight is reached"
+            );
+        }
 
         addNumericConfigParam<double>(
             "brew.target_time",
@@ -230,47 +254,56 @@ void ParameterRegistry::initialize(Config& config) {
             &targetBrewTime,
             TARGET_BREW_TIME_MIN,
             TARGET_BREW_TIME_MAX,
-            "Stop brew after this time. Set to 0 to deactivate brew-by-time-feature."
+            "Stop brew automatically after this amount of time"
         );
 
-        addNumericConfigParam<double>(
-            "brew.pre_infusion.pause",
-            "Preinfusion Pause Time (s)",
-            kDouble,
+        if (config.get<bool>("hardware.sensors.scale.enabled")) {
+            addNumericConfigParam<double>(
+                "brew.target_weight",
+                "Target Brew Weight (g)",
+                kDouble,
+                sBrewSection,
+                312,
+                &targetBrewWeight,
+                TARGET_BREW_WEIGHT_MIN,
+                TARGET_BREW_WEIGHT_MAX,
+                "Brew is running until this weight has been measured",
+                [] { return featureBrewControl; }
+            );
+        }
+
+        addBoolConfigParam(
+            "brew.pre_infusion.enabled",
+            "Pre-Infusion",
             sBrewSection,
-            312,
-            &preinfusionPause,
-            PRE_INFUSION_PAUSE_MIN,
-            PRE_INFUSION_PAUSE_MAX,
-            "Pause to let the puck bloom after the initial pre-infusion while turning off the pump and leaving the 3-way valve open"
+            321,
+            nullptr,
+            "Enables pre-wetting of the coffee puck by turning on the pump for a configurable length of time."
         );
 
         addNumericConfigParam<double>(
             "brew.pre_infusion.time",
-            "Preinfusion Time (s)",
+            "Pre-infusion Time (s)",
             kDouble,
             sBrewSection,
-            313,
+            322,
             &preinfusion,
             PRE_INFUSION_TIME_MIN,
             PRE_INFUSION_TIME_MAX,
             "Time in seconds the pump is running during the pre-infusion"
         );
 
-        if (config.get<bool>("hardware.sensors.scale.enabled")) {
-            addNumericConfigParam<double>(
-                "brew.target_weight",
-                "Brew weight target (g)",
-                kDouble,
-                sBrewSection,
-                321,
-                &targetBrewWeight,
-                TARGET_BREW_WEIGHT_MIN,
-                TARGET_BREW_WEIGHT_MAX,
-                "Brew is running until this weight has been measured. Set to 0 to deactivate brew-by-weight-feature.",
-                [] { return featureBrewControl; }
-            );
-        }
+        addNumericConfigParam<double>(
+            "brew.pre_infusion.pause",
+            "Pre-infusion Pause Time (s)",
+            kDouble,
+            sBrewSection,
+            323,
+            &preinfusionPause,
+            PRE_INFUSION_PAUSE_MIN,
+            PRE_INFUSION_PAUSE_MAX,
+            "Pause to let the puck bloom after the initial pre-infusion while turning off the pump and leaving the 3-way valve open"
+        );
 
         // Maintenance Section
         addNumericConfigParam<int>(
@@ -802,7 +835,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareRelaySection,
         2101,
         nullptr,
-        (const char* const[]){"Low Trigger", "High Trigger"},
+        relayTriggerTypes,
         2,
         "Relay trigger type for heater control"
     );
@@ -813,7 +846,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareRelaySection,
         2102,
         nullptr,
-        (const char* const[]){"Low Trigger", "High Trigger"},
+        relayTriggerTypes,
         2,
         "Relay trigger type for valve control"
     );
@@ -845,7 +878,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2202,
         nullptr,
-        (const char* const[]){"Momentary", "Toggle"},
+        switchTypes,
         2,
         "Type of brew switch connected"
     );
@@ -856,7 +889,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2203,
         nullptr,
-        (const char* const[]){"Normally Open", "Normally Closed"},
+        switchModes,
         2,
         "Electrical configuration of brew switch"
     );
@@ -876,7 +909,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2212,
         nullptr,
-        (const char* const[]){"Momentary", "Toggle"},
+        switchTypes,
         2,
         "Type of steam switch connected"
     );
@@ -887,7 +920,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2213,
         nullptr,
-        (const char* const[]){"Normally Open", "Normally Closed"},
+        switchModes,
         2,
         "Electrical configuration of steam switch"
     );
@@ -907,7 +940,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2222,
         nullptr,
-        (const char* const[]){"Momentary", "Toggle"},
+        switchTypes,
         2,
         "Type of power switch connected"
     );
@@ -918,7 +951,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSwitchSection,
         2223,
         nullptr,
-        (const char* const[]){"Normally Open", "Normally Closed"},
+        switchModes,
         2,
         "Electrical configuration of power switch"
     );
@@ -1045,7 +1078,7 @@ void ParameterRegistry::initialize(Config& config) {
         sHardwareSensorSection,
         2422,
         nullptr,
-        (const char* const[]){"Normally Open", "Normally Closed"},
+        switchModes,
         2,
         "Electrical configuration of water tank sensor"
     );

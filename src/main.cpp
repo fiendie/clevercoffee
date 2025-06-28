@@ -334,17 +334,19 @@ void checkWifi() {
     if (offlineMode || checkBrewActive()) return;
 
     // Try to connect and if it does not succeed, enter offline mode
-
     if ((millis() - lastWifiConnectionAttempt >= wifiConnectionDelay) && (wifiReconnects <= maxWifiReconnects)) {
         if (WiFi.status() != WL_CONNECTED) { // check WiFi connection status
             wifiConnectedHandled = false;
+
             if (wifiConnectCounter == 1) {
                 wifiReconnects++;
                 LOGF(INFO, "Attempting WIFI (re-)connection: %i", wifiReconnects);
                 wm.disconnect();
                 WiFi.begin();
             }
+
             delay(20);                // give WIFI some time to connect
+
             if (WiFi.status() != WL_CONNECTED && wifiConnectCounter < 100) {
                 wifiConnectCounter++; // reconnect counter, maximum waiting time for reconnect = 20*100ms plus loop times
             }
@@ -428,7 +430,6 @@ float filterPressureValue(const float input) {
 void handleMachineState() {
     switch (machineState) {
         case kInit:
-
             if (!waterTankFull) {
                 machineState = kWaterTankEmpty;
             }
@@ -447,7 +448,6 @@ void handleMachineState() {
             break;
 
         case kPidNormal:
-
             if (brew()) {
                 machineState = kBrew;
 
@@ -512,7 +512,6 @@ void handleMachineState() {
             break;
 
         case kBrew:
-
             if (!brew()) {
                 machineState = kPidNormal;
             }
@@ -536,7 +535,6 @@ void handleMachineState() {
             break;
 
         case kManualFlush:
-
             if (!manualFlush()) {
                 machineState = kPidNormal;
             }
@@ -555,7 +553,6 @@ void handleMachineState() {
             break;
 
         case kHotWater:
-
             if (!checkHotWaterStates()) {
                 machineState = kPidNormal;
             }
@@ -591,10 +588,10 @@ void handleMachineState() {
             if (tempSensor != nullptr && tempSensor->hasError()) {
                 machineState = kSensorError;
             }
+
             break;
 
         case kSteam:
-
             if (!steamON) {
                 machineState = kPidNormal;
             }
@@ -610,10 +607,10 @@ void handleMachineState() {
             if (tempSensor->hasError()) {
                 machineState = kSensorError;
             }
+
             break;
 
         case kBackflush:
-
             backflush();
 
             if (!backflushOn) {
@@ -635,10 +632,10 @@ void handleMachineState() {
             if (tempSensor != nullptr && tempSensor->hasError()) {
                 machineState = kSensorError;
             }
+
             break;
 
         case kEmergencyStop:
-
             if (!emergencyStop) {
                 machineState = kPidNormal;
             }
@@ -654,7 +651,6 @@ void handleMachineState() {
             break;
 
         case kWaterTankEmpty:
-
             if (waterTankFull) {
                 machineState = kPidNormal;
 
@@ -674,7 +670,6 @@ void handleMachineState() {
             break;
 
         case kPidDisabled:
-
             if (pidON) {
                 machineState = kPidNormal;
             }
@@ -766,12 +761,10 @@ void handleMachineState() {
             }
 
         case kSensorError:
-
             machineState = kSensorError;
             break;
 
         case kEepromError:
-
             machineState = kEepromError;
             break;
     }
