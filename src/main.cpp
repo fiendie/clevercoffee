@@ -311,20 +311,23 @@ void initOfflineMode() {
 void checkWifi() {
     static int wifiConnectCounter = 1;
     static bool wifiConnectedHandled = false;
+
     if (offlineMode || currBrewState > kBrewIdle) return;
 
     // Try to connect and if it does not succeed, enter offline mode
-
     if ((millis() - lastWifiConnectionAttempt >= wifiConnectionDelay) && (wifiReconnects <= maxWifiReconnects)) {
         if (WiFi.status() != WL_CONNECTED) { // check WiFi connection status
             wifiConnectedHandled = false;
+
             if (wifiConnectCounter == 1) {
                 wifiReconnects++;
                 LOGF(INFO, "Attempting WIFI (re-)connection: %i", wifiReconnects);
                 wm.disconnect();
                 WiFi.begin();
             }
+
             delay(20);                // give WIFI some time to connect
+
             if (WiFi.status() != WL_CONNECTED && wifiConnectCounter < 100) {
                 wifiConnectCounter++; // reconnect counter, maximum waiting time for reconnect = 20*100ms plus loop times
             }
