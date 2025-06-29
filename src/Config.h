@@ -286,9 +286,6 @@ class Config {
             _configDefs.emplace("standby.enabled", ConfigDef::forBool(false));
             _configDefs.emplace("standby.time", ConfigDef::forDouble(STANDBY_MODE_TIME, STANDBY_MODE_TIME_MIN, STANDBY_MODE_TIME_MAX));
 
-            // Features
-            _configDefs.emplace("features.brew_control", ConfigDef::forBool(false));
-
             // MQTT
             _configDefs.emplace("mqtt.enabled", ConfigDef::forBool(false));
             _configDefs.emplace("mqtt.broker", ConfigDef::forString("", MQTT_BROKER_MAX_LENGTH));

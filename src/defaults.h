@@ -35,8 +35,8 @@
 #define BREW_PID_DELAY            10.0              // delay until enabling PID controller during brew (no heating during this time)
 #define PRE_INFUSION_TIME         2.0               // pre-infusion time in seconds
 #define PRE_INFUSION_PAUSE_TIME   5.0               // pre-infusion pause time in seconds
-#define TARGET_BREW_WEIGHT        30.0              // Target weight in grams
-#define STANDBY_MODE_TIME         30.0              // Time in minutes until the heater is turned off
+#define TARGET_BREW_WEIGHT        36.0              // Target weight in grams
+#define STANDBY_MODE_TIME         35.0              // Time in minutes until the heater is turned off
 #define BACKFLUSH_CYCLES          5                 // number of cycles the backflush should run
 #define BACKFLUSH_FILL_TIME       5.0               // time in seconds the pump is running during backflush
 #define BACKFLUSH_FLUSH_TIME      10.0              // time in seconds the 3-way valve is open during backflush

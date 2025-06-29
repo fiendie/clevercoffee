@@ -144,15 +144,6 @@ This document describes all configuration parameters available in the `config.js
 
 ---
 
-## Features
-
-### `features.brew_control`
-- **Type**: Boolean
-- **Default**: `false`
-- **Description**: Enable advanced brew control features
-
----
-
 ## Hardware Configuration
 
 ## OLED Display
