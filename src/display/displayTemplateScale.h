@@ -82,13 +82,12 @@ inline void printScreen() {
      */
 
     if (config.get<bool>("hardware.switches.brew.enabled")) {
-        if (featureBrewControl) {
-
+        if (config.get<bool>("brew.by_time") || config.get<bool>("brew.by_weight")) {
             if (shouldDisplayBrewTimer()) {
-                // time
+                // Time
                 displayBrewTime(32, 36, langstring_brew, currBrewTime, totalTargetBrewTime);
 
-                // weight
+                // Weight
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(32, 27, 100, 10);
                 u8g2->setDrawColor(1);
@@ -97,7 +96,8 @@ inline void printScreen() {
                     displayBrewWeight(32, 26, currBrewWeight, targetBrewWeight, scaleFailure);
                 }
             }
-            // Shown flush time while machine is flushing
+
+            // Show flush time
             if (machineState == kManualFlush) {
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(32, 37, 100, 10);
@@ -108,13 +108,14 @@ inline void printScreen() {
         else {
             // Brew Timer with optocoupler
             if (shouldDisplayBrewTimer()) {
-                // time
+                // Time
                 displayBrewTime(32, 36, langstring_brew, currBrewTime);
 
-                // weight
+                // Weight
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(32, 27, 100, 10);
                 u8g2->setDrawColor(1);
+
                 if (scaleEnabled) {
                     displayBrewWeight(32, 26, currBrewWeight, -1, scaleFailure);
                 }

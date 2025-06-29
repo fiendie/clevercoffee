@@ -32,7 +32,6 @@ extern double backflushFillTime;
 extern double backflushFlushTime;
 extern bool standbyModeOn;
 extern double standbyModeTime;
-extern bool featureBrewControl;
 extern bool featureFullscreenBrewTimer;
 extern bool featureFullscreenManualFlushTimer;
 extern bool featureFullscreenHotWaterTimer;
@@ -217,15 +216,6 @@ void ParameterRegistry::initialize(Config& config) {
     // Brew Section
     if (config.get<bool>("hardware.switches.brew.enabled")) {
         addBoolConfigParam(
-            "features.brew_control",
-            "Brew Control",
-            sBrewSection,
-            301,
-            &featureBrewControl,
-            "Enables brew by time or brew by weight"
-        );
-
-        addBoolConfigParam(
             "brew.by_time",
             "Brew by Time",
             sBrewSection,
@@ -268,7 +258,7 @@ void ParameterRegistry::initialize(Config& config) {
                 TARGET_BREW_WEIGHT_MIN,
                 TARGET_BREW_WEIGHT_MAX,
                 "Brew is running until this weight has been measured",
-                [] { return featureBrewControl; }
+                [] { return true; }
             );
         }
 

@@ -84,8 +84,7 @@ inline void printScreen() {
 
     // Brew time
     if (config.get<bool>("hardware.switches.brew.enabled")) {
-        if (featureBrewControl) {
-            // Shown brew time
+        if (config.get<bool>("brew.by_time")) {
             if (shouldDisplayBrewTimer()) {
                 u8g2->setCursor(34, 44);
                 u8g2->print(langstring_brew);
@@ -94,7 +93,7 @@ inline void printScreen() {
                 u8g2->print(totalTargetBrewTime / 1000, 0);
             }
 
-            // Shown flush time
+            // Show flush time
             if (machineState == kManualFlush) {
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(34, 44, 100, 15);
@@ -105,7 +104,7 @@ inline void printScreen() {
             }
         }
         else {
-            // Brew Timer with optocoupler
+            // Shot Timer with optocoupler
             if (shouldDisplayBrewTimer()) {
                 u8g2->setCursor(34, 44);
                 u8g2->print(langstring_brew);

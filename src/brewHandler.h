@@ -51,7 +51,6 @@ inline uint8_t currReadingBrewSwitch = LOW;
 inline bool brewSwitchWasOff = false;
 
 // Brew values
-inline bool featureBrewControl = false;                   // enables control of pumpe and valve
 inline double targetBrewTime = TARGET_BREW_TIME;          // brew time in s
 inline double preinfusion = PRE_INFUSION_TIME;            // preinfusion time in s
 inline double preinfusionPause = PRE_INFUSION_PAUSE_TIME; // preinfusion pause time in s
@@ -257,8 +256,10 @@ inline bool brew() {
         currBrewTime = currentMillisTemp - startingTime;
     }
 
-    if (featureBrewControl) { // brew-by-time and brew-by-weight
+    const bool brewByTimeEnabled = config.get<bool>("brew.by_time");
+    const bool brewByWeightEnabled = config.get<bool>("brew.by_weight");
 
+    if (brewByTimeEnabled || brewByWeightEnabled) {
         // check if brewswitch was turned off after a brew; Brew only runs once even brewswitch is still pressed
         if (currBrewSwitchState == kBrewSwitchIdle) {
             brewSwitchWasOff = true;
@@ -326,12 +327,12 @@ inline bool brew() {
                 pumpRelay->on();
                 debugPumpState("BrewRunning", "on");
 
-                if (currBrewTime > totalTargetBrewTime && config.get<bool>("brew.by_time") && targetBrewTime > 0) {
+                if (currBrewTime > totalTargetBrewTime && brewByTimeEnabled) {
                     LOG(INFO, "Brew reached time target");
                     currBrewState = kBrewFinished;
                 }
 
-                else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && config.get<bool>("brew.by_weight") && targetBrewWeight > 0) {
+                else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && brewByWeightEnabled) {
                     LOG(INFO, "Brew reached weight target");
                     currBrewState = kBrewFinished;
                 }

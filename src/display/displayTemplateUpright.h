@@ -107,7 +107,7 @@ inline void printScreen() {
 
             u8g2->setFont(u8g2_font_profont22_tf);
 
-            if (featureBrewControl && machineState == kManualFlush) {
+            if (machineState == kManualFlush) {
                 u8g2->print("FLUSH");
             }
             else if (shouldDisplayBrewTimer()) {
@@ -180,7 +180,7 @@ inline void printScreen() {
 
             // Brew time
             if (brewEnabled) {
-                if (featureBrewControl) {
+                if (config.get<bool>("brew.by_weight") || config.get<bool>("brew.by_time")) {
                     // Show brew time
                     if (shouldDisplayBrewTimer()) {
                         displayBrewTime(1, 34, langstring_brew_ur, currBrewTime, totalTargetBrewTime);
@@ -193,7 +193,7 @@ inline void printScreen() {
                         }
                     }
 
-                    // Shown flush time
+                    // Show flush time
                     if (machineState == kManualFlush) {
                         u8g2->setDrawColor(0);
                         u8g2->drawBox(1, 35, 100, 10);

@@ -72,12 +72,12 @@ inline void printScreen() {
 
     // Brew and flush time
     if (config.get<bool>("hardware.switches.brew.enabled")) {
-        if (featureBrewControl) {
-            // Shown brew time
+        if (config.get<bool>("brew.by_time")) {
             if (shouldDisplayBrewTimer()) {
                 displayBrewTime(34, 36, langstring_brew, currBrewTime, totalTargetBrewTime);
             }
-            // Shown flush time while machine is flushing
+
+            // Show flush time
             if (machineState == kManualFlush) {
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(34, 37, 100, 10);
@@ -86,7 +86,7 @@ inline void printScreen() {
             }
         }
         else {
-            // Brew Timer with optocoupler
+            // Brew timer with optocoupler
             if (shouldDisplayBrewTimer()) {
                 displayBrewTime(34, 36, langstring_brew, currBrewTime);
             }
