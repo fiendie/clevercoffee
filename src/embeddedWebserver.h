@@ -142,7 +142,7 @@ inline void paramToJson(const String& name, const std::shared_ptr<Parameter>& pa
                 const char* const* enumOptions = param->getEnumOptions();
                 const size_t enumCount = param->getEnumCount();
 
-                for (size_t i = 0; i < enumCount; i++) {
+                for (size_t i = 0; i < enumCount && enumOptions[i] != nullptr; i++) {
                     auto optionObj = options.add<JsonObject>();
                     optionObj["value"] = static_cast<int>(i);
                     optionObj["label"] = enumOptions[i];

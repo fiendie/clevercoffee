@@ -180,40 +180,34 @@ inline void printScreen() {
 
             // Brew time
             if (brewEnabled) {
-                if (config.get<bool>("brew.by_weight") || config.get<bool>("brew.by_time")) {
-                    // Show brew time
-                    if (shouldDisplayBrewTimer()) {
-                        displayBrewTime(1, 34, langstring_brew_ur, currBrewTime, totalTargetBrewTime);
-
-                        if (scaleEnabled) {
-                            u8g2->setDrawColor(0);
-                            u8g2->drawBox(1, 45, 100, 10);
-                            u8g2->setDrawColor(1);
-                            displayBrewWeight(1, 44, currBrewWeight, targetBrewWeight, scaleFailure);
-                        }
-                    }
-
-                    // Show flush time
-                    if (machineState == kManualFlush) {
-                        u8g2->setDrawColor(0);
-                        u8g2->drawBox(1, 35, 100, 10);
-                        u8g2->setDrawColor(1);
-                        displayBrewTime(1, 34, langstring_manual_flush_ur, currBrewTime);
-                    }
+                // Show flush time
+                if (machineState == kManualFlush) {
+                    u8g2->setDrawColor(0);
+                    u8g2->drawBox(1, 35, 100, 10);
+                    u8g2->setDrawColor(1);
+                    displayBrewTime(1, 34, langstring_manual_flush_ur, currBrewTime);
                 }
                 else {
-                    // Show brew time with optocoupler
+                    // Show brew time
                     if (shouldDisplayBrewTimer()) {
-                        u8g2->setDrawColor(0);
-                        u8g2->drawBox(1, 35, 100, 10);
-                        u8g2->setDrawColor(1);
-                        displayBrewTime(1, 34, langstring_brew_ur, currBrewTime);
+                        if (config.get<bool>("brew.by_time")) {
+                            displayBrewTime(1, 34, langstring_brew_ur, currBrewTime, totalTargetBrewTime);
+                        }
+                        else {
+                            displayBrewTime(1, 34, langstring_brew_ur, currBrewTime);
+                        }
 
                         if (scaleEnabled) {
                             u8g2->setDrawColor(0);
                             u8g2->drawBox(1, 45, 100, 10);
                             u8g2->setDrawColor(1);
-                            displayBrewWeight(1, 44, currBrewWeight, -1, scaleFailure);
+
+                            if (config.get<bool>("brew.by_weight")) {
+                                displayBrewWeight(1, 44, currBrewWeight, targetBrewWeight, scaleFailure);
+                            }
+                            else {
+                                displayBrewWeight(1, 44, currBrewWeight, -1, scaleFailure);
+                            }
                         }
                     }
                 }

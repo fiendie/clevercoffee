@@ -70,53 +70,34 @@ inline void printScreen() {
         // Show current weight if scale has no error
         displayBrewWeight(32, 26, currReadingWeight, -1, scaleFailure);
     }
-    /**
-     * @brief Shot timer for scale
-     *
-     * If scale has an error show fault on the display otherwise show current reading of the scale
-     * if brew is running show current brew time and current brew weight
-     * if brewControl is enabled and time or weight target is set show targets
-     * if brewControl is enabled show flush time during manualFlush
-     * if pressure sensor is enabled show current pressure during brew
-     * if brew is finished show brew values for postBrewTimerDuration
-     */
 
     if (config.get<bool>("hardware.switches.brew.enabled")) {
-        if (config.get<bool>("brew.by_time") || config.get<bool>("brew.by_weight")) {
-            if (shouldDisplayBrewTimer()) {
-                // Time
+        // Show flush time
+        if (machineState == kManualFlush) {
+            u8g2->setDrawColor(0);
+            u8g2->drawBox(32, 37, 100, 10);
+            u8g2->setDrawColor(1);
+            displayBrewTime(32, 36, langstring_manual_flush, currBrewTime);
+        }
+        else if (shouldDisplayBrewTimer()) {
+            // Time
+            if (config.get<bool>("brew.by_time")) {
                 displayBrewTime(32, 36, langstring_brew, currBrewTime, totalTargetBrewTime);
+            }
+            else {
+                displayBrewTime(32, 36, langstring_brew, currBrewTime);
+            }
 
-                // Weight
+            // Weight
+            if (scaleEnabled) {
                 u8g2->setDrawColor(0);
                 u8g2->drawBox(32, 27, 100, 10);
                 u8g2->setDrawColor(1);
 
-                if (scaleEnabled) {
+                if (config.get<bool>("brew.by_weight")) {
                     displayBrewWeight(32, 26, currBrewWeight, targetBrewWeight, scaleFailure);
                 }
-            }
-
-            // Show flush time
-            if (machineState == kManualFlush) {
-                u8g2->setDrawColor(0);
-                u8g2->drawBox(32, 37, 100, 10);
-                u8g2->setDrawColor(1);
-                displayBrewTime(32, 36, langstring_manual_flush, currBrewTime);
-            }
-        }
-        else {
-            // Brew Timer with optocoupler
-            if (shouldDisplayBrewTimer()) {
-                // Time
-                displayBrewTime(32, 36, langstring_brew, currBrewTime);
-
-                // Weight
-                u8g2->setDrawColor(0);
-                u8g2->drawBox(32, 27, 100, 10);
-                u8g2->setDrawColor(1);
-
-                if (scaleEnabled) {
+                else {
                     displayBrewWeight(32, 26, currBrewWeight, -1, scaleFailure);
                 }
             }

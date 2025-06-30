@@ -84,31 +84,25 @@ inline void printScreen() {
 
     // Brew time
     if (config.get<bool>("hardware.switches.brew.enabled")) {
-        if (config.get<bool>("brew.by_time")) {
-            if (shouldDisplayBrewTimer()) {
-                u8g2->setCursor(34, 44);
-                u8g2->print(langstring_brew);
-                u8g2->print(currBrewTime / 1000, 0);
-                u8g2->print("/");
-                u8g2->print(totalTargetBrewTime / 1000, 0);
-            }
-
-            // Show flush time
-            if (machineState == kManualFlush) {
-                u8g2->setDrawColor(0);
-                u8g2->drawBox(34, 44, 100, 15);
-                u8g2->setDrawColor(1);
-                u8g2->setCursor(34, 44);
-                u8g2->print(langstring_manual_flush);
-                u8g2->print(currBrewTime / 1000, 0);
-            }
+        // Show flush time
+        if (machineState == kManualFlush) {
+            u8g2->setDrawColor(0);
+            u8g2->drawBox(34, 44, 100, 15);
+            u8g2->setDrawColor(1);
+            u8g2->setCursor(34, 44);
+            u8g2->print(langstring_manual_flush);
+            u8g2->print(currBrewTime / 1000, 0);
         }
         else {
-            // Shot Timer with optocoupler
             if (shouldDisplayBrewTimer()) {
                 u8g2->setCursor(34, 44);
                 u8g2->print(langstring_brew);
                 u8g2->print(currBrewTime / 1000, 0);
+
+                if (config.get<bool>("brew.by_time")) {
+                    u8g2->print("/");
+                    u8g2->print(totalTargetBrewTime / 1000, 0);
+                }
             }
         }
     }
