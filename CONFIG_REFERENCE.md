@@ -46,6 +46,14 @@ This document describes all configuration parameters available in the `config.js
 - **Range**: 0.0-20.0
 - **Description**: Temperature offset to compensate for sensor placement or other dropoff
 
+### `brew.mode`
+- **Type**: Integer (enum)
+- **Default**: `0`
+- **Valid Values**:
+  - `0`: Manual
+  - `1`: Automatic
+- **Description**: Manual mode gives you full control over the brew time while Automatic mode allows you to activate brew-by-time and/or brew-by-weight. The brew will then stop at whatever target is reached first.
+
 ### `brew.by_time`
 - **Type**: Boolean
 - **Default**: `false`
@@ -64,7 +72,7 @@ This document describes all configuration parameters available in the `config.js
 
 ### `brew.target_weight`
 - **Type**: Double (grams)
-- **Default**: `30.0`
+- **Default**: `36.0`
 - **Range**: 0.0-500.0
 - **Description**: Target output weight for automatic brewing (requires scale)
 
@@ -443,7 +451,7 @@ For each switch type (brew, power, steam):
 
 ### `standby.time`
 - **Type**: Double (minutes)
-- **Default**: `30.0`
+- **Default**: `35.0`
 - **Range**: 1.0-120.0
 - **Description**: Time before entering standby mode
 

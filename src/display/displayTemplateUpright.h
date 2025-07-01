@@ -68,8 +68,8 @@ inline void printScreen() {
 
         // Draw heat bar
         u8g2->drawFrame(0, 124, 64, 4);
-        u8g2->drawLine(1, 125, (pidOutput / 16.13) + 1, 125);
-        u8g2->drawLine(1, 126, (pidOutput / 16.13) + 1, 126);
+        u8g2->drawLine(1, 125, pidOutput / 16.13 + 1, 125);
+        u8g2->drawLine(1, 126, pidOutput / 16.13 + 1, 126);
 
         // logos that only fill the lower half leaving temperatures, top and bottom boxes
         if (config.get<bool>("display.pid_off_logo") && machineState == kPidDisabled) {
@@ -93,7 +93,6 @@ inline void printScreen() {
             u8g2->print(temperature, 1);
         }
         else {
-
             // print status
             if (scaleEnabled && pressureEnabled) {
                 u8g2->setCursor(1, 65);
@@ -157,8 +156,6 @@ inline void printScreen() {
             u8g2->print("%");
 
             // Brew
-            displayBrewTime(1, 34, langstring_brew_ur, currBrewTime, totalTargetBrewTime);
-
             if (scaleEnabled) {
                 displayBrewWeight(1, 44, currReadingWeight, -1, scaleFailure);
             }
@@ -180,17 +177,20 @@ inline void printScreen() {
 
             // Brew time
             if (brewEnabled) {
+                u8g2->setDrawColor(0);
+                u8g2->drawBox(1, 35, 100, 10);
+                u8g2->setDrawColor(1);
+
                 // Show flush time
                 if (machineState == kManualFlush) {
-                    u8g2->setDrawColor(0);
-                    u8g2->drawBox(1, 35, 100, 10);
-                    u8g2->setDrawColor(1);
                     displayBrewTime(1, 34, langstring_manual_flush_ur, currBrewTime);
                 }
                 else {
+                    const bool automaticBrewingEnabled = config.get<bool>("brew.mode") == 1;
+
                     // Show brew time
                     if (shouldDisplayBrewTimer()) {
-                        if (config.get<bool>("brew.by_time")) {
+                        if (automaticBrewingEnabled && config.get<bool>("brew.by_time")) {
                             displayBrewTime(1, 34, langstring_brew_ur, currBrewTime, totalTargetBrewTime);
                         }
                         else {
@@ -202,7 +202,7 @@ inline void printScreen() {
                             u8g2->drawBox(1, 45, 100, 10);
                             u8g2->setDrawColor(1);
 
-                            if (config.get<bool>("brew.by_weight")) {
+                            if (automaticBrewingEnabled && config.get<bool>("brew.by_weight")) {
                                 displayBrewWeight(1, 44, currBrewWeight, targetBrewWeight, scaleFailure);
                             }
                             else {

@@ -215,32 +215,32 @@ void ParameterRegistry::initialize(Config& config) {
 
     // Brew Section
     if (config.get<bool>("hardware.switches.brew.enabled")) {
+        addEnumConfigParam(
+            "brew.mode",
+            "Brew Mode",
+            sBrewSection,
+            301,
+            nullptr,
+            (const char* const[]){"Manual", "Automatic"},
+            2,
+            "Manual mode gives you full control over the brew time while Automatic mode allows you to activate brew-by-time and/or brew-by-weight. The brew will then stop at whatever target is reached first."
+        );
+
         addBoolConfigParam(
             "brew.by_time",
             "Brew by Time",
             sBrewSection,
-            302,
+            311,
             nullptr,
-            "Enables brew by time, so the pump stops automatically when the target brew time is reached"
+            "Enables brew by time, so the pump stops automatically when the target brew time is reached. Only available when Brew Mode is set to Automatic"
         );
-
-        if (config.get<bool>("hardware.sensors.scale.enabled")) {
-            addBoolConfigParam(
-                "brew.by_weight",
-                "Brew by Weight",
-                sBrewSection,
-                303,
-                nullptr,
-                "Enables brew by weight, so the pump stops automatically when the target weight is reached"
-            );
-        }
 
         addNumericConfigParam<double>(
             "brew.target_time",
             "Target Brew Time (s)",
             kDouble,
             sBrewSection,
-            311,
+            312,
             &targetBrewTime,
             TARGET_BREW_TIME_MIN,
             TARGET_BREW_TIME_MAX,
@@ -248,17 +248,25 @@ void ParameterRegistry::initialize(Config& config) {
         );
 
         if (config.get<bool>("hardware.sensors.scale.enabled")) {
+            addBoolConfigParam(
+                "brew.by_weight",
+                "Brew by Weight",
+                sBrewSection,
+                321,
+                nullptr,
+                "Enables brew by weight, so the pump stops automatically when the target weight is reached. Only available when Brew Mode is set to Automatic"
+            );
+
             addNumericConfigParam<double>(
                 "brew.target_weight",
                 "Target Brew Weight (g)",
                 kDouble,
                 sBrewSection,
-                312,
+                322,
                 &targetBrewWeight,
                 TARGET_BREW_WEIGHT_MIN,
                 TARGET_BREW_WEIGHT_MAX,
-                "Brew is running until this weight has been measured",
-                [] { return true; }
+                "Brew is running until this weight has been measured"
             );
         }
 
@@ -266,7 +274,7 @@ void ParameterRegistry::initialize(Config& config) {
             "brew.pre_infusion.enabled",
             "Pre-Infusion",
             sBrewSection,
-            321,
+            331,
             nullptr,
             "Enables pre-wetting of the coffee puck by turning on the pump for a configurable length of time."
         );
@@ -276,7 +284,7 @@ void ParameterRegistry::initialize(Config& config) {
             "Pre-infusion Time (s)",
             kDouble,
             sBrewSection,
-            322,
+            332,
             &preinfusion,
             PRE_INFUSION_TIME_MIN,
             PRE_INFUSION_TIME_MAX,
@@ -288,7 +296,7 @@ void ParameterRegistry::initialize(Config& config) {
             "Pre-infusion Pause Time (s)",
             kDouble,
             sBrewSection,
-            323,
+            333,
             &preinfusionPause,
             PRE_INFUSION_PAUSE_MIN,
             PRE_INFUSION_PAUSE_MAX,

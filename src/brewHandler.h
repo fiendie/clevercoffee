@@ -81,14 +81,14 @@ inline HX711_ADC LoadCell2(PIN_HXDAT2, PIN_HXCLK);
 /**
  * @brief True if in an intermediate brew state, false if idle or finished
  */
-bool checkBrewActive() {
+inline bool checkBrewActive() {
     return (currBrewState != kBrewIdle && currBrewState != kBrewFinished); // removed && !(machineState >= kEmergencyStop)
 }
 
 /**
  * @brief True if in a machine state related to brew or flush, false if in other states
  */
-bool checkBrewStates() {
+inline bool checkBrewStates() {
     return (machineState == kBrew || machineState == kBackflush || machineState == kManualFlush);
 }
 
@@ -222,7 +222,7 @@ inline void checkBrewSwitch() {
  * @brief If set to publish debug messages then list what the current action is and what triggered it
  * @return void
  */
-void debugPumpState(String label, String state) {
+inline void debugPumpState(String label, String state) {
     hotWaterStateDebug = state;
     IFLOG(DEBUG) {
         if (hotWaterStateDebug != lastHotWaterStateDebug) {
@@ -256,141 +256,108 @@ inline bool brew() {
         currBrewTime = currentMillisTemp - startingTime;
     }
 
-    const bool brewByTimeEnabled = config.get<bool>("brew.by_time");
-    const bool brewByWeightEnabled = config.get<bool>("brew.by_weight");
+    const int brewMode = config.get<int>("brew.mode");
+    const bool brewByTimeEnabled = brewMode != 0 && config.get<bool>("brew.by_time");
+    const bool brewByWeightEnabled = brewMode != 0 && config.get<bool>("brew.by_weight");
+    const bool preinfusionEnabled = config.get<bool>("brew.pre_infusion.enabled");
 
-    if (brewByTimeEnabled || brewByWeightEnabled) {
-        // check if brewswitch was turned off after a brew; Brew only runs once even brewswitch is still pressed
-        if (currBrewSwitchState == kBrewSwitchIdle) {
-            brewSwitchWasOff = true;
-        }
+    // check if brewswitch was turned off after a brew; Brew only runs once even brewswitch is still pressed
+    if (currBrewSwitchState == kBrewSwitchIdle) {
+        brewSwitchWasOff = true;
+    }
 
-        // set brew time every cycle, in case changes are done during brew
-        if (targetBrewTime > 0) {
-            totalTargetBrewTime = targetBrewTime * 1000;
+    // set brew time every cycle, in case changes are done during brew
+    if (targetBrewTime > 0) {
+        totalTargetBrewTime = targetBrewTime * 1000;
 
-            if (config.get<bool>("brew.pre_infusion.enabled")) {
-                totalTargetBrewTime += preinfusion * 1000 + preinfusionPause * 1000;
-            }
-        }
-        else {
-            // Stop by time deactivated --> totalTargetBrewTime = 0
-            totalTargetBrewTime = 0;
-        }
-
-        // state machine for brew
-        switch (currBrewState) {
-            case kBrewIdle:           // waiting step for brew switch turning on
-                if (currBrewSwitchState == kBrewSwitchShortPressed && brewSwitchWasOff && !backflushOn && machineState != kBackflush) {
-                    startingTime = millis();
-                    currBrewTime = 0; // reset currBrewTime, last brew is still stored
-                    LOG(INFO, "Brew started");
-
-                    if (!config.get<bool>("brew.pre_infusion.enabled") || preinfusionPause == 0 || preinfusion == 0) {
-                        LOG(INFO, "Brew running");
-                        currBrewState = kBrewRunning;
-                    }
-                    else {
-                        LOG(INFO, "Preinfusion running");
-                        currBrewState = kPreinfusion;
-                    }
-                }
-
-                break;
-
-            case kPreinfusion:
-                valveRelay->on();
-                pumpRelay->on();
-                debugPumpState("Preinfusion", "on");
-
-                if (currBrewTime > preinfusion * 1000) {
-                    LOG(INFO, "Preinfusion pause running");
-                    currBrewState = kPreinfusionPause;
-                }
-
-                break;
-
-            case kPreinfusionPause:
-                valveRelay->on();
-                pumpRelay->off();
-                debugPumpState("PreinfusionPause", "off");
-
-                if (currBrewTime > (preinfusion + preinfusionPause) * 1000) {
-                    LOG(INFO, "Brew running");
-                    currBrewState = kBrewRunning;
-                }
-
-                break;
-
-            case kBrewRunning:
-                valveRelay->on();
-                pumpRelay->on();
-                debugPumpState("BrewRunning", "on");
-
-                if (currBrewTime > totalTargetBrewTime && brewByTimeEnabled) {
-                    LOG(INFO, "Brew reached time target");
-                    currBrewState = kBrewFinished;
-                }
-
-                else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && brewByWeightEnabled) {
-                    LOG(INFO, "Brew reached weight target");
-                    currBrewState = kBrewFinished;
-                }
-
-                break;
-
-            case kBrewFinished:
-                valveRelay->off();
-                pumpRelay->off();
-                debugPumpState("BrewFinished", "off");
-                brewSwitchWasOff = false;
-                LOG(INFO, "Brew finished");
-                LOGF(INFO, "Shot time: %4.1f s", currBrewTime / 1000);
-                LOG(INFO, "Brew idle");
-                currBrewState = kBrewIdle;
-
-                break;
-
-            default:
-                currBrewState = kBrewIdle;
-                LOG(DEBUG, "Unexpected brew state -> currBrewState = kBrewIdle");
-
-                break;
+        if (preinfusionEnabled) {
+            totalTargetBrewTime += preinfusion * 1000 + preinfusionPause * 1000;
         }
     }
     else {
-        switch (currBrewState) {
-            case kBrewIdle:
-                if (currBrewSwitchState == kBrewSwitchShortPressed) {
-                    startingTime = millis();
-                    currBrewTime = 0; // reset timeBrewed, last brew is still stored
-                    LOG(INFO, "Brew timer started");
+        // Stop by time deactivated --> totalTargetBrewTime = 0
+        totalTargetBrewTime = 0;
+    }
+
+    // state machine for brew
+    switch (currBrewState) {
+        case kBrewIdle:           // waiting step for brew switch turning on
+            if (currBrewSwitchState == kBrewSwitchShortPressed && brewSwitchWasOff && !backflushOn && machineState != kBackflush) {
+                startingTime = millis();
+                currBrewTime = 0; // reset currBrewTime, last brew is still stored
+                LOG(INFO, "Brew started");
+
+                if (!preinfusionEnabled) {
+                    LOG(INFO, "Brew running");
                     currBrewState = kBrewRunning;
                 }
-
-                break;
-
-            case kBrewRunning:
-                if (currBrewSwitchState == kBrewSwitchIdle && currBrewState == kBrewRunning) {
-                    currBrewState = kBrewFinished;
+                else {
+                    LOG(INFO, "Preinfusion running");
+                    currBrewState = kPreinfusion;
                 }
+            }
 
-                break;
+            break;
 
-            case kBrewFinished:
-                LOG(INFO, "Brew finished");
-                LOGF(INFO, "Shot time: %4.1f s", currBrewTime / 1000);
-                LOG(INFO, "Brew idle");
-                currBrewState = kBrewIdle;
+        case kPreinfusion:
+            valveRelay->on();
+            pumpRelay->on();
+            debugPumpState("Preinfusion", "on");
 
-                break;
+            if (currBrewTime > preinfusion * 1000) {
+                LOG(INFO, "Preinfusion pause running");
+                currBrewState = kPreinfusionPause;
+            }
 
-            default:
-                currBrewState = kBrewIdle;
-                LOG(DEBUG, "Unexpected brew state -> currBrewState = kBrewIdle");
+            break;
 
-                break;
-        }
+        case kPreinfusionPause:
+            valveRelay->on();
+            pumpRelay->off();
+            debugPumpState("PreinfusionPause", "off");
+
+            if (currBrewTime > (preinfusion + preinfusionPause) * 1000) {
+                LOG(INFO, "Brew running");
+                currBrewState = kBrewRunning;
+            }
+
+            break;
+
+        case kBrewRunning:
+            valveRelay->on();
+            pumpRelay->on();
+            debugPumpState("BrewRunning", "on");
+
+            if (currBrewTime > totalTargetBrewTime && brewByTimeEnabled) {
+                LOG(INFO, "Brew reached time target");
+                currBrewState = kBrewFinished;
+            }
+
+            else if (config.get<bool>("hardware.sensors.scale.enabled") && currBrewWeight > targetBrewWeight && brewByWeightEnabled) {
+                LOG(INFO, "Brew reached weight target");
+                currBrewState = kBrewFinished;
+            }
+
+            break;
+
+        case kBrewFinished:
+            valveRelay->off();
+            pumpRelay->off();
+            debugPumpState("BrewFinished", "off");
+
+            brewSwitchWasOff = false;
+            LOG(INFO, "Brew finished");
+            LOGF(INFO, "Shot time: %4.1f s", currBrewTime / 1000);
+            LOG(INFO, "Brew idle");
+            currBrewState = kBrewIdle;
+
+            break;
+
+        default:
+            currBrewState = kBrewIdle;
+            LOG(DEBUG, "Unexpected brew state -> currBrewState = kBrewIdle");
+
+            break;
     }
 
     return checkBrewActive();
