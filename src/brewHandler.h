@@ -106,6 +106,12 @@ inline void valveSafetyShutdownCheck() {
  * @brief Toggle or momentary input for Brew Switch
  */
 inline void checkBrewSwitch() {
+    if (config.get<bool>("hardware.switches.power.enabled")) {
+        if (powerSwitch != nullptr && !powerSwitch->isPressed()) {
+            return;
+        }
+    }
+
     static bool loggedEmptyWaterTank = false;
     brewSwitchReading = brewSwitch->isPressed();
 

@@ -1,3 +1,4 @@
+
 /**
  * @file powerHandler.h
  *
@@ -5,37 +6,63 @@
  */
 #pragma once
 
-inline uint8_t currStatePowerSwitch; // the current reading from the input pin
+inline bool currStatePowerSwitchPressed = false;
+inline bool lastPowerSwitchPressed = false;
+
+void performSafeShutdown();
 
 inline void checkPowerSwitch() {
     if (!config.get<bool>("hardware.switches.power.enabled") || powerSwitch == nullptr) {
         return;
     }
 
-    const uint8_t powerSwitchReading = powerSwitch->isPressed();
+    const bool powerSwitchPressed = powerSwitch->isPressed();
 
     if (const int powerSwitchType = config.get<int>("hardware.switches.power.type"); powerSwitchType == Switch::TOGGLE) {
-        // Set pidON to 1 when powerswitch is HIGH
-        if ((powerSwitchReading == HIGH && machineState != kStandby) || (powerSwitchReading == LOW && machineState == kStandby)) {
-            setRuntimePidState(true);
-        }
-        else {
-            // Set pidON to 0 when powerswitch is not HIGH
-            setRuntimePidState(false);
+        if (powerSwitchPressed != lastPowerSwitchPressed) {
+            lastPowerSwitchPressed = powerSwitchPressed;
+
+            if (powerSwitchPressed) {
+                if (machineState == kStandby) {
+                    // Exit standby and turn on
+                    machineState = kPidNormal;
+                    standbyModeOn = false;
+                    resetStandbyTimer(kPidNormal);
+                    setRuntimePidState(true);
+                    u8g2->setPowerSave(0);
+                }
+            }
+            else {
+                if (machineState != kStandby) {
+                    performSafeShutdown();
+                    machineState = kStandby;
+                    standbyModeOn = true;
+
+                    standbyModeRemainingTimeMillis = 0;
+                    standbyModeRemainingTimeDisplayOffMillis = 0;
+                }
+            }
         }
     }
     else if (powerSwitchType == Switch::MOMENTARY) {
-        // if the button state has changed:
-        if (powerSwitchReading != currStatePowerSwitch) {
-            currStatePowerSwitch = powerSwitchReading;
+        if (powerSwitchPressed != currStatePowerSwitchPressed) {
+            currStatePowerSwitchPressed = powerSwitchPressed;
 
-            // only toggle heating power if the new button state is HIGH
-            if (currStatePowerSwitch == HIGH) {
-                if (pidON == 0) {
+            if (currStatePowerSwitchPressed) {
+                if (machineState == kStandby) {
+                    machineState = kPidNormal;
+                    standbyModeOn = false;
+                    resetStandbyTimer(kPidNormal);
                     setRuntimePidState(true);
+                    u8g2->setPowerSave(0);
                 }
                 else {
-                    setRuntimePidState(false);
+                    performSafeShutdown();
+                    machineState = kStandby;
+                    standbyModeOn = true;
+
+                    standbyModeRemainingTimeMillis = 0;
+                    standbyModeRemainingTimeDisplayOffMillis = 0;
                 }
             }
         }

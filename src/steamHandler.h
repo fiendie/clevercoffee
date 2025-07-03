@@ -12,6 +12,12 @@ inline void checkSteamSwitch() {
         return;
     }
 
+    if (config.get<bool>("hardware.switches.power.enabled")) {
+        if (powerSwitch != nullptr && !powerSwitch->isPressed()) {
+            return;
+        }
+    }
+
     const uint8_t steamSwitchReading = steamSwitch->isPressed();
 
     if (config.get<int>("hardware.switches.steam.type") == Switch::TOGGLE) {

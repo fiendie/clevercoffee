@@ -1474,6 +1474,36 @@ void setSteamMode(bool steamMode) {
     }
 }
 
+/**
+ * @brief Safely shutdown machine operations
+ * Turns off pump, valve, and heater regardless of current state
+ */
+void performSafeShutdown() {
+    setRuntimePidState(false);
+
+    if (pumpRelay != nullptr) {
+        pumpRelay->off();
+    }
+    if (valveRelay != nullptr) {
+        valveRelay->off();
+    }
+    if (heaterRelay != nullptr) {
+        heaterRelay->off();
+    }
+
+    currBrewState = kBrewIdle;
+    currBrewSwitchState = kBrewSwitchIdle;
+    currBrewTime = 0;
+    startingTime = 0;
+
+    // Reset operation flags
+    steamON = false;
+    steamFirstON = false;
+
+    // Log the shutdown
+    LOGF(INFO, "Safe shutdown, all relays turned off");
+}
+
 void setPIDTunings(const bool usePonM) {
     // Prevent overwriting of brewdetection values
     // calc ki, kd
