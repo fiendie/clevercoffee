@@ -119,6 +119,11 @@ inline void checkBrewSwitch() {
         return;
     }
 
+    // Block brewSwitch input while hot water is being drawn
+    if (machineState == kHotWater) {
+        return;
+    }
+
     loggedEmptyWaterTank = false;
 
     // Convert toggle brew switch input to brew switch state
