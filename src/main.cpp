@@ -79,6 +79,8 @@ int lastmachinestatepid = -1;
 bool offlineMode = false;
 int displayOffline = 0;
 
+inline bool systemInitialized = false;
+
 // Display
 U8G2* u8g2 = nullptr;
 
@@ -1162,6 +1164,14 @@ void setup() {
 
     double fsUsage = ((double)LittleFS.usedBytes() / LittleFS.totalBytes()) * 100;
     LOGF(INFO, "LittleFS: %d%% (used %ld bytes from %ld bytes)", (int)ceil(fsUsage), LittleFS.usedBytes(), LittleFS.totalBytes());
+
+    systemInitialized = true;
+
+    // For momentary switches, start in normal operation mode
+    if (config.get<bool>("hardware.switches.power.enabled") && config.get<int>("hardware.switches.power.type") == Switch::MOMENTARY) {
+        machineState = kPidNormal;
+        setRuntimePidState(true);
+    }
 }
 
 void loop() {
@@ -1481,27 +1491,44 @@ void setSteamMode(bool steamMode) {
 void performSafeShutdown() {
     setRuntimePidState(false);
 
-    if (pumpRelay != nullptr) {
-        pumpRelay->off();
-    }
-    if (valveRelay != nullptr) {
-        valveRelay->off();
-    }
-    if (heaterRelay != nullptr) {
-        heaterRelay->off();
+    heaterRelay->off();
+    pumpRelay->off();
+    valveRelay->off();
+
+    // Reset all brew-related states
+    if (currBrewState != kBrewIdle) {
+        LOG(INFO, "Stopping active brew");
+        currBrewState = kBrewIdle;
+        currBrewSwitchState = kBrewSwitchIdle;
+        currBrewTime = 0;
+        startingTime = 0;
+        brewSwitchWasOff = false;
     }
 
-    currBrewState = kBrewIdle;
-    currBrewSwitchState = kBrewSwitchIdle;
-    currBrewTime = 0;
-    startingTime = 0;
+    // Reset backflush state
+    if (currBackflushState != kBackflushIdle) {
+        LOG(INFO, "Stopping active backflush");
+        currBackflushState = kBackflushIdle;
+        currBackflushCycles = 1;
+    }
 
-    // Reset operation flags
-    steamON = false;
-    steamFirstON = false;
+    // Reset hot water state
+    if (currHotWaterState != kHotWaterIdle) {
+        LOG(INFO, "Stopping hot water draw");
+        currHotWaterState = kHotWaterIdle;
+        currHotWaterSwitchState = kHotWaterSwitchIdle;
+        currPumpOnTime = 0;
+        pumpStartingTime = 0;
+    }
 
-    // Log the shutdown
-    LOGF(INFO, "Safe shutdown, all relays turned off");
+    // Turn off steam mode if active
+    if (steamON) {
+        LOG(INFO, "Disabling steam mode");
+        steamON = false;
+        steamFirstON = false;
+    }
+
+    LOG(INFO, "Safe shutdown, all relays turned off");
 }
 
 void setPIDTunings(const bool usePonM) {

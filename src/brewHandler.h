@@ -78,6 +78,8 @@ inline bool scaleFailure = false;
 inline HX711_ADC LoadCell(PIN_HXDAT, PIN_HXCLK);
 inline HX711_ADC LoadCell2(PIN_HXDAT2, PIN_HXCLK);
 
+bool isPowerSwitchOperationAllowed();
+
 /**
  * @brief True if in an intermediate brew state, false if idle or finished
  */
@@ -106,10 +108,8 @@ inline void valveSafetyShutdownCheck() {
  * @brief Toggle or momentary input for Brew Switch
  */
 inline void checkBrewSwitch() {
-    if (config.get<bool>("hardware.switches.power.enabled")) {
-        if (powerSwitch != nullptr && !powerSwitch->isPressed()) {
-            return;
-        }
+    if (!isPowerSwitchOperationAllowed()) {
+        return;
     }
 
     static bool loggedEmptyWaterTank = false;

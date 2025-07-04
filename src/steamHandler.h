@@ -12,10 +12,8 @@ inline void checkSteamSwitch() {
         return;
     }
 
-    if (config.get<bool>("hardware.switches.power.enabled")) {
-        if (powerSwitch != nullptr && !powerSwitch->isPressed()) {
-            return;
-        }
+    if (!isPowerSwitchOperationAllowed()) {
+        return;
     }
 
     const uint8_t steamSwitchReading = steamSwitch->isPressed();

@@ -82,6 +82,10 @@ bool checkHotWaterStops() {
  * @brief Toggle or momentary input for Hot Water Switch
  */
 inline void checkHotWaterSwitch() {
+    if (!isPowerSwitchOperationAllowed()) {
+        return;
+    }
+
     static bool loggedEmptyWaterTank = false;
     hotWaterSwitchReading = hotWaterSwitch->isPressed();
 

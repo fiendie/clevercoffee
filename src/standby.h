@@ -27,38 +27,43 @@ inline void updateStandbyTimer() {
         return;
     }
 
-    if (const unsigned long currentTime = millis(); standbyModeRemainingTimeMillis != 0 && currentTime % 1000 == 0 && currentTime != lastStandbyTimeMillis) {
-        const unsigned long standbyModeTimeMillis = getStandbyTimeoutMillis();
-        const unsigned long elapsedTime = static_cast<long>(currentTime) - standbyModeStartTimeMillis;
+    const unsigned long currentTime = millis();
+
+    // Update every second since last update
+    if (currentTime - lastStandbyTimeMillis >= 1000) {
         lastStandbyTimeMillis = currentTime;
 
-        if (standbyModeTimeMillis > elapsedTime) {
-            standbyModeRemainingTimeMillis = standbyModeTimeMillis - elapsedTime;
+        if (standbyModeRemainingTimeMillis != 0) {
+            const unsigned long standbyModeTimeMillis = getStandbyTimeoutMillis();
+            const unsigned long elapsedTime = currentTime - standbyModeStartTimeMillis;
 
-            if (currentTime % 60000 == 0) {
-                LOGF(INFO, "Standby time remaining: %i minutes", standbyModeRemainingTimeMillis / 60000);
+            if (standbyModeTimeMillis > elapsedTime) {
+                standbyModeRemainingTimeMillis = standbyModeTimeMillis - elapsedTime;
+
+                if (elapsedTime % 60000 < 1000) {
+                    LOGF(INFO, "Standby time remaining: %i minutes", standbyModeRemainingTimeMillis / 60000);
+                }
+            }
+            else {
+                standbyModeRemainingTimeMillis = 0;
+                LOG(INFO, "Entering standby mode...");
             }
         }
-        else {
-            standbyModeRemainingTimeMillis = 0;
-            LOG(INFO, "Entering standby mode...");
-        }
-    }
-    else if (standbyModeRemainingTimeDisplayOffMillis != 0 && currentTime % 1000 == 0 && currentTime != lastStandbyTimeMillis) {
-        const unsigned long standbyModeTimeMillis = getStandbyTimeoutMillis() + TIME_TO_DISPLAY_OFF_MILLIS;
-        const unsigned long elapsedTime = currentTime - standbyModeStartTimeMillis;
-        lastStandbyTimeMillis = currentTime;
+        else if (standbyModeRemainingTimeDisplayOffMillis != 0) {
+            const unsigned long standbyModeTimeMillis = getStandbyTimeoutMillis() + TIME_TO_DISPLAY_OFF_MILLIS;
+            const unsigned long elapsedTime = currentTime - standbyModeStartTimeMillis;
 
-        if (standbyModeTimeMillis > elapsedTime) {
-            standbyModeRemainingTimeDisplayOffMillis = standbyModeTimeMillis - elapsedTime;
+            if (standbyModeTimeMillis > elapsedTime) {
+                standbyModeRemainingTimeDisplayOffMillis = standbyModeTimeMillis - elapsedTime;
 
-            if (currentTime % 60000 == 0) {
-                LOGF(INFO, "Standby time until display is turned off: %i minutes", standbyModeRemainingTimeDisplayOffMillis / 60000);
+                if (elapsedTime % 60000 < 1000) {
+                    LOGF(INFO, "Standby time until display is turned off: %i minutes", standbyModeRemainingTimeDisplayOffMillis / 60000);
+                }
             }
-        }
-        else {
-            standbyModeRemainingTimeDisplayOffMillis = 0;
-            LOG(INFO, "Turning off display...");
+            else {
+                standbyModeRemainingTimeDisplayOffMillis = 0;
+                LOG(INFO, "Turning off display...");
+            }
         }
     }
 }

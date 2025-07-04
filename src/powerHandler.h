@@ -1,4 +1,3 @@
-
 /**
  * @file powerHandler.h
  *
@@ -8,6 +7,8 @@
 
 inline bool currStatePowerSwitchPressed = false;
 inline bool lastPowerSwitchPressed = false;
+
+extern bool systemInitialized;
 
 void performSafeShutdown();
 
@@ -24,9 +25,7 @@ inline void checkPowerSwitch() {
 
             if (powerSwitchPressed) {
                 if (machineState == kStandby) {
-                    // Exit standby and turn on
                     machineState = kPidNormal;
-                    standbyModeOn = false;
                     resetStandbyTimer(kPidNormal);
                     setRuntimePidState(true);
                     u8g2->setPowerSave(0);
@@ -36,8 +35,6 @@ inline void checkPowerSwitch() {
                 if (machineState != kStandby) {
                     performSafeShutdown();
                     machineState = kStandby;
-                    standbyModeOn = true;
-
                     standbyModeRemainingTimeMillis = 0;
                     standbyModeRemainingTimeDisplayOffMillis = 0;
                 }
@@ -48,10 +45,9 @@ inline void checkPowerSwitch() {
         if (powerSwitchPressed != currStatePowerSwitchPressed) {
             currStatePowerSwitchPressed = powerSwitchPressed;
 
-            if (currStatePowerSwitchPressed) {
+            if (currStatePowerSwitchPressed && systemInitialized) {
                 if (machineState == kStandby) {
                     machineState = kPidNormal;
-                    standbyModeOn = false;
                     resetStandbyTimer(kPidNormal);
                     setRuntimePidState(true);
                     u8g2->setPowerSave(0);
@@ -59,12 +55,30 @@ inline void checkPowerSwitch() {
                 else {
                     performSafeShutdown();
                     machineState = kStandby;
-                    standbyModeOn = true;
-
                     standbyModeRemainingTimeMillis = 0;
                     standbyModeRemainingTimeDisplayOffMillis = 0;
                 }
             }
         }
     }
+}
+
+/**
+ * @brief Check if power switch allows operation (for brew/steam/hot water handlers)
+ * @return true if operation is allowed, false otherwise
+ */
+inline bool isPowerSwitchOperationAllowed() {
+    if (!config.get<bool>("hardware.switches.power.enabled") || powerSwitch == nullptr) {
+        return true; // No power switch configured, allow operation
+    }
+
+    if (const int powerSwitchType = config.get<int>("hardware.switches.power.type"); powerSwitchType == Switch::TOGGLE) {
+        return powerSwitch->isPressed();
+    }
+    else if (powerSwitchType == Switch::MOMENTARY) {
+        // For momentary switches, check machine state instead of switch state
+        return machineState != kStandby;
+    }
+
+    return true;
 }
