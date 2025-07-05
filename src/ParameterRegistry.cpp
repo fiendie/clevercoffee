@@ -889,7 +889,7 @@ void ParameterRegistry::initialize(Config& config) {
         nullptr,
         switchModes,
         2,
-        "Electrical configuration of brew switch"
+        "Electrical configuration of brew switch<br>Normally Open is active high<br>Normally Closed is active low"
     );
 
     addBoolConfigParam(
@@ -920,7 +920,7 @@ void ParameterRegistry::initialize(Config& config) {
         nullptr,
         switchModes,
         2,
-        "Electrical configuration of steam switch"
+        "Electrical configuration of steam switch<br>Normally Open is active high<br>Normally Closed is active low"
     );
 
     addBoolConfigParam(
@@ -951,7 +951,7 @@ void ParameterRegistry::initialize(Config& config) {
         nullptr,
         switchModes,
         2,
-        "Electrical configuration of power switch"
+        "Electrical configuration of power switch<br>Normally Open is active high<br>Normally Closed is active low"
     );
 
     addBoolConfigParam(
@@ -982,7 +982,7 @@ void ParameterRegistry::initialize(Config& config) {
         nullptr,
         (const char* const[]){"Normally Open", "Normally Closed"},
         2,
-        "Electrical configuration of water switch"
+        "Electrical configuration of water switch<br>Normally Open is active high<br>Normally Closed is active low"
     );
 
     // LEDs

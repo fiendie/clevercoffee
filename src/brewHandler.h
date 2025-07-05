@@ -98,7 +98,7 @@ inline bool checkBrewStates() {
  * @brief turns off valve if not in an active brew state or if machineState changes away from one related to brewing or flushing
  */
 inline void valveSafetyShutdownCheck() {
-    if (!checkBrewActive() || !checkBrewStates()) {
+    if (!checkBrewActive() && !checkBrewStates()) {
         currBrewState == kBrewIdle; // reset state to idle if not in an active brew/flush state
         valveRelay->off();
     }
