@@ -1037,25 +1037,25 @@ void setup() {
     if (config.get<bool>("hardware.switches.power.enabled")) {
         const auto type = static_cast<Switch::Type>(config.get<int>("hardware.switches.power.type"));
         const auto mode = static_cast<Switch::Mode>(config.get<int>("hardware.switches.power.mode"));
-        powerSwitch = new IOSwitch(PIN_POWERSWITCH, GPIOPin::IN_HARDWARE, type, mode);
+        powerSwitch = new IOSwitch(PIN_POWERSWITCH, GPIOPin::IN_HARDWARE, type, mode, mode);
     }
 
     if (config.get<bool>("hardware.switches.steam.enabled")) {
         const auto type = static_cast<Switch::Type>(config.get<int>("hardware.switches.steam.type"));
         const auto mode = static_cast<Switch::Mode>(config.get<int>("hardware.switches.steam.mode"));
-        steamSwitch = new IOSwitch(PIN_STEAMSWITCH, GPIOPin::IN_HARDWARE, type, mode);
+        steamSwitch = new IOSwitch(PIN_STEAMSWITCH, GPIOPin::IN_HARDWARE, type, mode, mode);
     }
 
     if (config.get<bool>("hardware.switches.brew.enabled")) {
         const auto type = static_cast<Switch::Type>(config.get<int>("hardware.switches.brew.type"));
         const auto mode = static_cast<Switch::Mode>(config.get<int>("hardware.switches.brew.mode"));
-        brewSwitch = new IOSwitch(PIN_BREWSWITCH, GPIOPin::IN_HARDWARE, type, mode);
+        brewSwitch = new IOSwitch(PIN_BREWSWITCH, GPIOPin::IN_HARDWARE, type, mode, mode);
     }
 
     if (config.get<bool>("hardware.switches.hot_water.enabled")) {
         const auto type = static_cast<Switch::Type>(config.get<int>("hardware.switches.hot_water.type"));
         const auto mode = static_cast<Switch::Mode>(config.get<int>("hardware.switches.hot_water.mode"));
-        hotWaterSwitch = new IOSwitch(PIN_WATERSWITCH, GPIOPin::IN_HARDWARE, type, mode);
+        hotWaterSwitch = new IOSwitch(PIN_WATERSWITCH, GPIOPin::IN_HARDWARE, type, mode, mode);
     }
 
     if (config.get<bool>("hardware.leds.status.enabled")) {

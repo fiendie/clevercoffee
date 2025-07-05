@@ -9,7 +9,7 @@
 
 #include "Logger.h"
 IOSwitch::IOSwitch(const int pinNumber, const GPIOPin::Type pinType, const Type switchType, const Mode mode, const uint8_t initialState) :
-    Switch(switchType, mode), gpio(pinNumber, pinType), lastState(initialState), currentState(initialState) {
+    Switch(switchType, mode), gpio(pinNumber, pinType), lastState(initialState), currentState(LOW) {
 }
 
 bool IOSwitch::isPressed() {
@@ -27,14 +27,13 @@ bool IOSwitch::isPressed() {
             if (currentState == LOW) {
                 lastStateChangeTime = currentMillis;
             }
+            else {
+                pressStartTime = currentMillis;
+            }
         }
     }
 
     lastState = reading;
-
-    if (lastState != currentState) {
-        pressStartTime = millis();
-    }
 
     if (type_ == MOMENTARY) {
         if (currentState == HIGH && pressStartTime + longPressDuration <= currentMillis) {

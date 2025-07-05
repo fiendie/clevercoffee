@@ -161,7 +161,7 @@ inline void checkHotWaterSwitch() {
                 }
                 else if (currReadingHotWaterSwitch == HIGH && hotWaterSwitch->longPressDetected()) { // Hot Water switch long press detected
                     currHotWaterSwitchState = kHotWaterSwitchLongPressed;
-                    LOG(DEBUG, "Hot Water switch long press detected -> got to currHotWaterSwitchState = kHotWaterSwitchLongPressed; start pump");
+                    LOG(DEBUG, "Hot Water switch long press detected -> got to currHotWaterSwitchState = kHotWaterSwitchLongPressed");
                 }
                 break;
 
@@ -179,7 +179,7 @@ inline void checkHotWaterSwitch() {
             case kHotWaterSwitchLongPressed:
                 if (currReadingHotWaterSwitch == LOW) { // Hot Water switch got released after long press detected - reset hot water switch
                     currHotWaterSwitchState = kHotWaterSwitchWaitForRelease;
-                    LOG(DEBUG, "Hot Water switch long press released -> got to currHotWaterSwitchState = kHotWaterSwitchWaitForRelease; stop pump");
+                    LOG(DEBUG, "Hot Water switch long press released -> got to currHotWaterSwitchState = kHotWaterSwitchWaitForRelease");
                 }
                 break;
 
