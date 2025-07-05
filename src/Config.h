@@ -308,7 +308,6 @@ class Config {
 
             // Debugging
             _configDefs.emplace("system.timing_debug.enabled", ConfigDef::forBool(false));
-            _configDefs.emplace("system.timing.enabled", ConfigDef::forBool(false));
             _configDefs.emplace("system.showdisplay.enabled", ConfigDef::forBool(true));
 
             // Display

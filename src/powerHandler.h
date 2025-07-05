@@ -60,6 +60,23 @@ inline void checkPowerSwitch() {
                 }
             }
         }
+
+        // Check for long press to trigger reboot (only for momentary switches)
+        if (powerSwitchPressed && systemInitialized && powerSwitch->longPressDetected()) {
+            LOG(INFO, "Power switch long press detected - initiating system reboot");
+            u8g2->setPowerSave(0);
+
+            // Display reboot message
+            displayMessage("REBOOTING", "Please wait...", "", "", "", "");
+            delay(1000);
+
+            performSafeShutdown();
+
+            LOG(INFO, "System reboot initiated");
+            delay(500);
+
+            ESP.restart();
+        }
     }
 }
 
