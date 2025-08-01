@@ -7,46 +7,86 @@
 
 #pragma once
 
-/**
- * Input Pins
- */
+#ifdef BOARD_ESP32_S3
+    #define TARGET_BOARD_ESP32_S3
+#elif defined(BOARD_ESP32_CLASSIC)
+    #define TARGET_BOARD_ESP32_CLASSIC
+#else
+    // Default to ESP32 Classic for backward compatibility
+    #define TARGET_BOARD_ESP32_CLASSIC
+#endif
 
-// Switches/Buttons
-#define PIN_POWERSWITCH 39
-#define PIN_BREWSWITCH  34
-#define PIN_STEAMSWITCH 35
-#define PIN_WATERSWITCH 36
+#ifdef TARGET_BOARD_ESP32_S3
+    // ESP32-S3 Pin Mapping (16MB Flash, 8MB PSRAM)
+    #define PIN_POWERSWITCH 15
+    #define PIN_BREWSWITCH  16
+    #define PIN_STEAMSWITCH 17
+    #define PIN_WATERSWITCH 18
 
-#define PIN_ROTARY_DT  4 // Rotary encoder data pin
-#define PIN_ROTARY_CLK 3 // Rotary encoder clock pin
-#define PIN_ROTARY_SW  5 // Rotary encoder switch
+    #define PIN_ROTARY_DT  4
+    #define PIN_ROTARY_CLK 5
+    #define PIN_ROTARY_SW  6
 
-// Sensors
-#define PIN_TEMPSENSOR      16
-#define PIN_WATERTANKSENSOR 23
-#define PIN_HXDAT           32 // Brew scale data pin 1
-#define PIN_HXDAT2          25 // Brew scale data pin 2
-#define PIN_HXCLK           33 // Brew scale clock pin
+    #define PIN_TEMPSENSOR      7
+    #define PIN_WATERTANKSENSOR 8
+    #define PIN_HXDAT           9
+    #define PIN_HXDAT2          10
+    #define PIN_HXCLK           11
 
-/**
- * Output pins
- */
+    #define PIN_VALVE  12
+    #define PIN_PUMP   13
+    #define PIN_HEATER 14
 
-// Relays
-#define PIN_VALVE  17
-#define PIN_PUMP   27
-#define PIN_HEATER 2
+    #define PIN_STATUSLED 38
+    #define PIN_BREWLED   39
+    #define PIN_STEAMLED  40
 
-// LEDs
-#define PIN_STATUSLED 26
-#define PIN_BREWLED   19
-#define PIN_STEAMLED  1
+    #define PIN_ZC 41
 
-// Periphery
-#define PIN_ZC 18 // Dimmer circuit Zero Crossing
+    #define PIN_I2CSCL 42
+    #define PIN_I2CSDA 21
 
-/**
- * Bidirectional Pins
- */
-#define PIN_I2CSCL 22
-#define PIN_I2CSDA 21
+#else
+    // ESP32 Classic Pin Mapping
+    #define PIN_POWERSWITCH 39
+    #define PIN_BREWSWITCH  34
+    #define PIN_STEAMSWITCH 35
+    #define PIN_WATERSWITCH 36
+
+    #define PIN_ROTARY_DT  4
+    #define PIN_ROTARY_CLK 3
+    #define PIN_ROTARY_SW  5
+
+    #define PIN_TEMPSENSOR      16
+    #define PIN_WATERTANKSENSOR 23
+    #define PIN_HXDAT           32
+    #define PIN_HXDAT2          25
+    #define PIN_HXCLK           33
+
+    #define PIN_VALVE  17
+    #define PIN_PUMP   27
+    #define PIN_HEATER 2
+
+    #define PIN_STATUSLED 26
+    #define PIN_BREWLED   19
+    #define PIN_STEAMLED  1
+
+    #define PIN_ZC 18
+
+    #define PIN_I2CSCL 22
+    #define PIN_I2CSDA 21
+
+#endif
+
+// Board capability detection macros
+#ifdef TARGET_BOARD_ESP32_S3
+    #define BOARD_HAS_LARGE_FLASH 1
+    #define BOARD_HAS_LARGE_PSRAM 1
+    #define BOARD_FLASH_SIZE_MB 16
+    #define BOARD_PSRAM_SIZE_MB 8
+#else
+    #define BOARD_HAS_LARGE_FLASH 0
+    #define BOARD_HAS_LARGE_PSRAM 0
+    #define BOARD_FLASH_SIZE_MB 4
+    #define BOARD_PSRAM_SIZE_MB 0
+#endif
