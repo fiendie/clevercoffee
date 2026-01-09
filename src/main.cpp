@@ -1098,6 +1098,10 @@ void setup() {
                 mqttVars["backflushFlushTime"] = "backflush.flush_time";
             }
 
+            if (config.get<bool>("hardware.sensors.watertank.enabled")) {
+                mqttSensors["waterTankFull"] = [] { return waterTankFull; };
+            }
+
             if (config.get<bool>("hardware.sensors.scale.enabled")) {
                 if (config.get<bool>("brew.mode") == 1) {
                     mqttVars["targetBrewWeight"] = "brew.by_weight.target_weight";
