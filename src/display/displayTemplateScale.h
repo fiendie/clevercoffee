@@ -60,6 +60,7 @@ inline void printScreen() {
     u8g2->print(setpoint, 1);
     u8g2->print(static_cast<char>(176));
     u8g2->print("C");
+    u8g2->print(menuLevel == 1 ? "<" : " ");
 
     if (scale) {
         // Show current weight if scale has no error

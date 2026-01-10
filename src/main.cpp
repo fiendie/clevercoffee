@@ -12,6 +12,7 @@
 // Libraries & Dependencies
 #include "Logger.h"
 #include <ArduinoOTA.h>
+#include <ESP32Encoder.h>
 #include <LittleFS.h>
 #include <PID_v1.h>  // for PID calculation
 #include <U8g2lib.h> // i2c display
@@ -97,6 +98,9 @@ bool featureFullscreenHotWaterTimer = false;
 double postBrewTimerDuration = POST_BREW_TIMER_DURATION;
 bool featureHeatingLogo = false;
 
+// encoder menu
+int menuLevel = 0;
+
 // WiFi
 WiFiManager wm;
 constexpr unsigned long wifiConnectionDelay = WIFICONNECTIONDELAY;
@@ -130,6 +134,7 @@ unsigned long lastDisplayUpdate = 0;
 #include "utils/timingDebug.h"
 
 Switch* waterTankSensor = nullptr;
+Switch* encoderSwitch = nullptr;
 
 GPIOPin* statusLedPin = nullptr;
 GPIOPin* brewLedPin = nullptr;
@@ -217,6 +222,7 @@ bool steamFirstON = false;
 PID bPID(&temperature, &pidOutput, &setpoint, aggKp, aggKi, aggKd, 1, DIRECT);
 
 #include "brewHandler.h"
+#include "hardware/rotaryEncoder.h"
 #include "hotWaterHandler.h"
 
 // Other variables
@@ -1042,6 +1048,11 @@ void setup() {
         waterTankSensor = new IOSwitch(PIN_WATERTANKSENSOR, (mode == Switch::NORMALLY_OPEN ? GPIOPin::IN_PULLDOWN : GPIOPin::IN_PULLUP), Switch::TOGGLE, mode, !mode);
     }
 
+    if (config.get<bool>("hardware.switches.encoder.enabled")) {
+        encoderSwitch = new IOSwitch(PIN_ROTARY_SW, GPIOPin::IN_PULLUP, Switch::TOGGLE, Switch::NORMALLY_CLOSED, Switch::NORMALLY_CLOSED);
+        initEncoder();
+    }
+
     if (!config.get<bool>("system.offline_mode")) { // WiFi Mode
         wiFiSetup();
         serverSetup();
@@ -1391,6 +1402,7 @@ void loopPid() {
     hotWaterHandler();
     valveSafetyShutdownCheck();
     testTimer();
+    encoderHandler();
 
     if (config.get<bool>("hardware.switches.brew.enabled")) {
         shouldDisplayBrewTimer();

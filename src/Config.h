@@ -341,6 +341,7 @@ class Config {
             _configDefs.emplace("hardware.switches.hot_water.enabled", ConfigDef::forBool(false));
             _configDefs.emplace("hardware.switches.hot_water.type", ConfigDef::forInt(Switch::TOGGLE, 0, 2));
             _configDefs.emplace("hardware.switches.hot_water.mode", ConfigDef::forInt(Switch::NORMALLY_OPEN, 0, 1));
+            _configDefs.emplace("hardware.switches.encoder.enabled", ConfigDef::forBool(false));
 
             // Hardware - LEDs
             _configDefs.emplace("hardware.leds.status.enabled", ConfigDef::forBool(false));

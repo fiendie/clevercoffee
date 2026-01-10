@@ -1065,6 +1065,15 @@ void ParameterRegistry::initialize(Config& config) {
         [] { return true; },
         true
     );
+    
+    addBoolConfigParam(
+        "hardware.switches.encoder.enabled",
+        "Enable Encoder",
+        sHardwareSwitchSection,
+        2241,
+        nullptr,
+        "Enable encoder with button"
+    );
 
     // LEDs
     addBoolConfigParam(

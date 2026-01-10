@@ -16,7 +16,6 @@
 #define TARGET_BOARD_ESP32_CLASSIC
 #endif
 
-
 /* available pins
 https://randomnerdtutorials.com/esp32-s3-devkitc-pinout-guide/
 https://github.com/atomic14/esp32-s3-pinouts?tab=readme-ov-file
@@ -72,9 +71,7 @@ minus avoid (32)
 47,48
 
 left to use
-3 (strapping) ,18
 */
-
 
 #ifdef TARGET_BOARD_ESP32_S3
 // ESP32-S3 Pin Mapping (16MB Flash, 8MB PSRAM)
@@ -83,9 +80,9 @@ left to use
 #define PIN_STEAMSWITCH 17
 #define PIN_WATERSWITCH 18
 
-#define PIN_ROTARY_DT  4 // tested 
-#define PIN_ROTARY_CLK 5 // tested 
-#define PIN_ROTARY_SW  6 // tested 
+#define PIN_ROTARY_DT  4      // tested S2
+#define PIN_ROTARY_CLK 5      // tested S1
+#define PIN_ROTARY_SW  6      // tested SW
 
 #define PIN_TEMPSENSOR      7 // tested as CS pin kType
 #define PIN_TEMPSENSOR2     10
@@ -93,12 +90,12 @@ left to use
 #define PIN_HXDAT           19
 #define PIN_HXDAT2          44
 #define PIN_HXCLK           47
-#define PIN_HXCLK2          48  // could be done in software by writing a custom read function
+#define PIN_HXCLK2          48 // could be done in software by writing a custom read function
 
-#define PIN_VALVE  12
-#define PIN_PUMP   13
-#define PIN_PUMP2  41
-#define PIN_HEATER 14
+#define PIN_VALVE   12
+#define PIN_PUMP    13
+#define PIN_PUMP2   41
+#define PIN_HEATER  14
 #define PIN_HEATER2 42
 
 #define PIN_STATUSLED 38
@@ -107,14 +104,15 @@ left to use
 
 #define PIN_ZC 21
 
-#define PIN_I2CSCL 9 // tested, HWI2C
-#define PIN_I2CSDA 8 // tested, HWI2C
-#define PIN_SPIMOSI 11 // tested, HWSPI
-#define PIN_SPIMISO 13 // tested, HWSPI
-#define PIN_SPICLK 12 // tested, HWSPI
-#define PIN_OLEDCS 0 // tested, strapping
-#define OLED_RESET 18 // not used, currently on Enable Pin and testing stability
-#define PIN_SPIDC 46 // tested, strapping
+#define PIN_I2CSCL        9  // tested, HWI2C
+#define PIN_I2CSDA        8  // tested, HWI2C
+#define PIN_SPIMOSI       11 // tested, HWSPI
+#define PIN_SPIMISO       13 // tested, HWSPI
+#define PIN_SPICLK        12 // tested, HWSPI
+#define PIN_SPIDC         46 // tested, strapping
+#define PIN_OLEDCS        0  // tested, strapping
+#define PIN_OLEDBACKLIGHT 3 // not tested
+#define PIN_OLEDRESET     18 // not used, currently on Enable Pin and testing stability
 
 #else
 // ESP32 Classic Pin Mapping
